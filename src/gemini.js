@@ -1,3 +1,8 @@
+// Gemini APIを使って、ボード上の付箋の内容を要約・提案してもらうユーティリティ。
+//
+// 使う前に、Google AI Studio (https://aistudio.google.com/apikey) で取得した
+// APIキーを下に入力してください。
+
 // Gemini APIキーは、Vercelの環境変数 VITE_GEMINI_API_KEY から読み込む。
 // コードに直接書かないことで、GitHub上に秘密情報が残らないようにしている。
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -12,7 +17,9 @@ export async function askGeminiAboutBoard(notesText, instruction) {
 
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
-  const prompt = `以下は、あるチームがオンラインホワイトボードに書き出した付箋の内容です。
+  const prompt = `以下は、あるチームがオンラインホワイトボードで行った議論の記録です。
+「付箋の内容」は現在ボードに残っている付箋のテキストで、誰が書いたかの情報はありません。
+「発言者ごとの編集履歴」は、誰が・どんな文章を書いたかが「名前: 内容」の形式で記録されたものです。
 
 --- 付箋の内容 ---
 ${notesText || "（付箋はまだありません）"}
@@ -20,7 +27,11 @@ ${notesText || "（付箋はまだありません）"}
 
 チームからの依頼: 「${instruction}」
 
-上記の依頼に沿って、日本語で分かりやすく回答してください。`;
+回答のルール:
+- 依頼の中に特定の人物名が含まれている場合は、「発言者ごとの編集履歴」からその人物の発言だけを抽出し、その人物の発言のみをもとに回答してください。他の人の発言や、チーム全体の話を混ぜないでください。
+- 該当する人物の発言が記録の中に見つからない場合は、その旨を正直に伝えてください。
+- 人物名の指定がない場合は、付箋全体の内容をもとに回答してください。
+- 日本語で分かりやすく回答してください。`;
 
   const response = await fetch(url, {
     method: "POST",
