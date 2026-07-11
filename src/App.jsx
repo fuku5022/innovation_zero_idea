@@ -82,19 +82,21 @@ export default function App() {
 
 function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
   const {
-    notes,
-    links,
-    presence,
-    activityLog,
-    addNote,
-    updateNote,
-    deleteNote,
-    addLink,
-    setNoteImageUrl,
-    toggleReaction,
-    commitTextEdit,
-    connectionError,
-  } = useBoard(boardId, userName, userColor);
+  notes,
+  links,
+  presence,
+  activityLog,
+  aiLog,
+  addNote,
+  updateNote,
+  deleteNote,
+  addLink,
+  setNoteImageUrl,
+  toggleReaction,
+  commitTextEdit,
+  saveAiLog,
+  connectionError,
+} = useBoard(boardId, userName, userColor);
 
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
   const [linkMode, setLinkMode] = useState(false);
@@ -218,13 +220,15 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
           ))}
         </div>
       </div>
-      {showAiModal && (
-        <AiAssistModal
-          notes={notes}
-          activityLog={activityLog}
-          onClose={() => setShowAiModal(false)}
-        />
-      )}
+     {showAiModal && (
+  <AiAssistModal
+    notes={notes}
+    activityLog={activityLog}
+    aiLog={aiLog}
+    onSaveAiLog={saveAiLog}
+    onClose={() => setShowAiModal(false)}
+  />
+)}
       <div className="board-wrapper">
         <div className="board-inner">
           <LinkLayer notes={notes} links={links} />
