@@ -6,13 +6,7 @@ import Home from "./Home.jsx";
 import StickyNote from "./StickyNote.jsx";
 import LinkLayer from "./LinkLayer.jsx";
 
-const COLORS = ["amber", "blue", "green", "pink"];
-const COLOR_HEX = {
-  amber: "#EF9F27",
-  blue: "#85B7EB",
-  green: "#97C459",
-  pink: "#ED93B1",
-};
+const PRESET_COLORS = ["#EF9F27", "#85B7EB", "#97C459", "#ED93B1"];
 
 function getOrCreateUserName() {
   let name = localStorage.getItem("csb_username");
@@ -99,7 +93,7 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
     connectionError,
   } = useBoard(boardId, userName, userColor);
 
-  const [selectedColor, setSelectedColor] = useState("amber");
+  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
   const [linkMode, setLinkMode] = useState(false);
   const [linkFirst, setLinkFirst] = useState(null);
 
@@ -125,6 +119,10 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
 
   function handleDelete(id) {
     deleteNote(id);
+  }
+
+  function handleSetColor(id, hex) {
+    updateNote(id, { color: hex }, "色を変更");
   }
 
   function handleClickForLink(id) {
@@ -158,16 +156,23 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
         <button className={linkMode ? "active" : ""} onClick={toggleLinkMode}>
           ⇄ 線でつなぐ{linkMode ? "（付箋を2つクリック）" : ""}
         </button>
-        <div style={{ display: "flex", gap: 4 }}>
-          {COLORS.map((c) => (
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          {PRESET_COLORS.map((hex) => (
             <button
-              key={c}
-              className={`color-swatch${selectedColor === c ? " selected" : ""}`}
-              style={{ background: COLOR_HEX[c] }}
-              aria-label={c}
-              onClick={() => setSelectedColor(c)}
+              key={hex}
+              className={`color-swatch${selectedColor === hex ? " selected" : ""}`}
+              style={{ background: hex }}
+              aria-label={hex}
+              onClick={() => setSelectedColor(hex)}
             />
           ))}
+          <label className="color-swatch-custom" title="自由な色を選ぶ">
+            <input
+              type="color"
+              value={selectedColor}
+              onChange={(e) => setSelectedColor(e.target.value)}
+            />
+          </label>
         </div>
         <button onClick={handleExportCsv}>⬇ ログをCSVで保存</button>
         <div className="presence-bar">
@@ -196,6 +201,7 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
               onDelete={handleDelete}
               onClickForLink={handleClickForLink}
               onSetImageUrl={setNoteImageUrl}
+              onSetColor={handleSetColor}
             />
           ))}
         </div>
