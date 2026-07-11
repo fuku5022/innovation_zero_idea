@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { db, storage } from "./firebase.js";
+import { db } from "./firebase.js";
 import {
   ref,
   onValue,
@@ -10,7 +10,6 @@ import {
   onDisconnect,
   serverTimestamp,
 } from "firebase/database";
-import { ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
 function logActivity(boardId, userName, action, detail = "") {
   const logRef = push(ref(db, `boards/${boardId}/activityLog`));
@@ -134,26 +133,12 @@ export function useBoard(boardId, userName, userColor) {
     [boardId, userName]
   );
 
-  const uploadNoteImage = useCallback(
-    async (id, file) => {
-      if (!boardId || !file) return;
-      const path = `boards/${boardId}/notes/${id}/${Date.now()}_${file.name}`;
-      const fileRef = storageRef(storage, path);
-      await uploadBytes(fileRef, file);
-      const url = await getDownloadURL(fileRef);
-      const noteRef = ref(db, `boards/${boardId}/notes/${id}`);
-      update(noteRef, { imageUrl: url, updatedAt: serverTimestamp() });
-      logActivity(boardId, userName, "画像を追加", file.name);
-    },
-    [boardId, userName]
-  );
-
-  const removeNoteImage = useCallback(
-    (id) => {
+  const setNoteImageUrl = useCallback(
+    (id, url) => {
       if (!boardId) return;
       const noteRef = ref(db, `boards/${boardId}/notes/${id}`);
-      update(noteRef, { imageUrl: null, updatedAt: serverTimestamp() });
-      logActivity(boardId, userName, "画像を削除");
+      update(noteRef, { imageUrl: url || null, updatedAt: serverTimestamp() });
+      logActivity(boardId, userName, url ? "画像を追加" : "画像を削除");
     },
     [boardId, userName]
   );
@@ -167,8 +152,7 @@ export function useBoard(boardId, userName, userColor) {
     updateNote,
     deleteNote,
     addLink,
-    uploadNoteImage,
-    removeNoteImage,
+    setNoteImageUrl,
     boardId,
     connectionError,
   };
