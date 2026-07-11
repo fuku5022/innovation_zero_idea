@@ -13,11 +13,15 @@ export default function StickyNote({
   isLinkMode,
   isLinkSelected,
   onMove,
+  onMoveEnd,
   onTextChange,
   onDelete,
   onClickForLink,
+  onUploadImage,
+  onRemoveImage,
 }) {
   const dragState = useRef(null);
+  const fileInputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
 
   function handlePointerDown(e) {
@@ -25,8 +29,7 @@ export default function StickyNote({
       onClickForLink(id);
       return;
     }
-    // textarea内をクリックした場合はドラッグを開始しない（文字入力を優先）
-    if (e.target.tagName === "TEXTAREA") return;
+    if (["TEXTAREA", "BUTTON", "IMG"].includes(e.target.tagName)) return;
 
     dragState.current = {
       startX: e.clientX,
@@ -46,8 +49,20 @@ export default function StickyNote({
   }
 
   function handlePointerUp() {
+    const wasDragging = dragState.current !== null;
     dragState.current = null;
     setDragging(false);
+    if (wasDragging && onMoveEnd) {
+      onMoveEnd(id);
+    }
+  }
+
+  function handleFileChange(e) {
+    const file = e.target.files?.[0];
+    if (file) {
+      onUploadImage(id, file);
+    }
+    e.target.value = "";
   }
 
   return (
@@ -73,11 +88,47 @@ export default function StickyNote({
       >
         ×
       </button>
+
+      {note.imageUrl && (
+        <div className="note-image-wrapper">
+          <img src={note.imageUrl} alt="" className="note-image" />
+          <button
+            className="note-image-remove"
+            aria-label="画像を削除"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveImage(id);
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <textarea
         value={note.text || ""}
         placeholder="アイデアをここに"
         onChange={(e) => onTextChange(id, e.target.value)}
         onPointerDown={(e) => e.stopPropagation()}
+      />
+
+      {!note.imageUrl && (
+        <button
+          className="note-image-add"
+          onClick={(e) => {
+            e.stopPropagation();
+            fileInputRef.current?.click();
+          }}
+        >
+          ＋画像
+        </button>
+      )}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
       />
     </div>
   );
