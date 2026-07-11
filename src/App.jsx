@@ -195,6 +195,7 @@ function BoardView(props) {
   var aiLog = board.aiLog;
   var addNote = board.addNote;
   var updateNote = board.updateNote;
+  var rescueDoneRef = useRef(false);
   var deleteNote = board.deleteNote;
   var addLink = board.addLink;
   var deleteLink = board.deleteLink;
@@ -232,6 +233,25 @@ function BoardView(props) {
       height: Math.max(MIN_BOARD_HEIGHT, maxBottom + BOARD_MARGIN),
     };
   }, [notes]);
+
+  // 過去にマイナス座標（ボードの見えない外側）に迷い込んでしまった付箋があれば、
+  // 一度だけ表示可能な位置（0,0付近）に引き戻す救出処理。
+  // 一度救出したら二重に動かさないよう rescueDoneRef でガードする。
+  useEffect(function () {
+    if (rescueDoneRef.current) return;
+    var ids = Object.keys(notes);
+    if (ids.length === 0) return;
+    var lost = ids.filter(function (id) {
+      var n = notes[id];
+      return (n.x || 0) < 0 || (n.y || 0) < 0;
+    });
+    if (lost.length > 0) {
+      lost.forEach(function (id, i) {
+        updateNote(id, { x: 40 + i * 30, y: 40 + i * 30 });
+      });
+    }
+    rescueDoneRef.current = true;
+  }, [notes, updateNote]);
 
   var matchedNoteIds = useMemo(function () {
     var term = searchTerm.trim().toLowerCase();
