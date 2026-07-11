@@ -149,6 +149,15 @@ export function useBoard(boardId, userName, userColor) {
     [boardId, userName]
   );
 
+  const deleteLink = useCallback(
+  (linkId) => {
+    if (!boardId) return;
+    remove(ref(db, `boards/${boardId}/links/${linkId}`));
+    logActivity(boardId, userName, "線を削除した");
+  },
+  [boardId, userName]
+);
+  
   const setNoteImageUrl = useCallback(
     (id, url) => {
       if (!boardId) return;
@@ -202,6 +211,7 @@ export function useBoard(boardId, userName, userColor) {
     updateNote,
     deleteNote,
     addLink,
+    deleteLink,
     setNoteImageUrl,
     toggleReaction,
     commitTextEdit,
