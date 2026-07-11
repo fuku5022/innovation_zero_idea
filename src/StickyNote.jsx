@@ -93,6 +93,8 @@ export default function StickyNote({
   }
 
   function handleTextBlur() {
+    // 入力を始めた時と終えた時で内容が変わっていたら、ログに1件だけ記録する
+    // （1文字ごとに記録すると大量になりすぎるため）
     if (textAtFocusRef.current !== (note.text || "") && onTextCommit) {
       onTextCommit(id);
     }
@@ -154,3 +156,100 @@ export default function StickyNote({
 
       <button
         className="note-color-toggle"
+        aria-label="色を変更"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowColorPicker((v) => !v);
+        }}
+      >
+        <span className="note-color-toggle-dot" />
+      </button>
+
+      {showColorPicker && (
+        <div className="note-color-picker" onPointerDown={(e) => e.stopPropagation()}>
+          <div className="note-color-presets">
+            {PRESET_COLORS.map((hex) => (
+              <button
+                key={hex}
+                className="note-color-preset-btn"
+                style={{ background: hex }}
+                onClick={() => handlePickColor(hex)}
+              />
+            ))}
+          </div>
+          <label className="note-color-custom">
+            自由な色
+            <input
+              type="color"
+              value={currentHex}
+              onChange={(e) => handlePickColor(e.target.value)}
+            />
+          </label>
+        </div>
+      )}
+
+      {note.imageUrl && (
+        <div className="note-image-wrapper">
+          <img src={note.imageUrl} alt="" className="note-image" />
+          <button
+            className="note-image-remove"
+            aria-label="画像を削除"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSetImageUrl(id, null);
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <textarea
+        ref={textareaRef}
+        value={note.text || ""}
+        placeholder="アイデアをここに"
+        onChange={(e) => {
+          onTextChange(id, e.target.value);
+          autoResize();
+        }}
+        onFocus={handleTextFocus}
+        onBlur={handleTextBlur}
+        onPointerDown={(e) => e.stopPropagation()}
+        rows={1}
+      />
+
+      <div className="note-footer">
+        <button
+          className={`note-reaction${iReacted ? " reacted" : ""}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleReaction(id, reactions);
+          }}
+        >
+          👍 {reactionCount > 0 ? reactionCount : ""}
+        </button>
+
+        {!note.imageUrl && (
+          <button
+            className="note-image-add"
+            disabled={uploading}
+            onClick={(e) => {
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
+          >
+            {uploading ? "アップロード中..." : "＋画像"}
+          </button>
+        )}
+      </div>
+      {uploadError && <p className="note-image-error">失敗しました。もう一度お試しください</p>}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+    </div>
+  );
+}
