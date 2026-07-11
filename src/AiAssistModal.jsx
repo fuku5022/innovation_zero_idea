@@ -3,7 +3,7 @@ import { askGeminiAboutBoard } from "./gemini.js";
 
 const COOLDOWN_MS = 8000;
 
-export default function AiAssistModal({ notes, onClose }) {
+export default function AiAssistModal({ notes, activityLog, onClose }) {
   const [instruction, setInstruction] = useState("要約して");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
@@ -15,6 +15,11 @@ export default function AiAssistModal({ notes, onClose }) {
     .map((n) => n.text)
     .filter((t) => t && t.trim())
     .map((t, i) => `${i + 1}. ${t}`)
+    .join("\n");
+
+  const contributionsText = Object.values(activityLog || {})
+    .filter((row) => row.action === "テキストを編集" && row.detail && row.detail.trim())
+    .map((row) => `${row.userName}: ${row.detail}`)
     .join("\n");
 
   async function handleAsk() {
@@ -33,7 +38,10 @@ export default function AiAssistModal({ notes, onClose }) {
     setResult("");
     setCooldown(true);
     try {
-      const text = await askGeminiAboutBoard(notesText, instruction.trim());
+      const combinedText = contributionsText
+        ? `${notesText}\n\n--- 発言者ごとの編集履歴 ---\n${contributionsText}`
+        : notesText;
+      const text = await askGeminiAboutBoard(combinedText, instruction.trim());
       setResult(text);
     } catch (e) {
       setError(true);
@@ -76,6 +84,9 @@ export default function AiAssistModal({ notes, onClose }) {
           <button onClick={() => setInstruction("要約して")}>要約して</button>
           <button onClick={() => setInstruction("アイデアを3つ提案して")}>アイデアを3つ提案して</button>
           <button onClick={() => setInstruction("課題点を整理して")}>課題点を整理して</button>
+          <button onClick={() => setInstruction("参加者ごとの発言の傾向を分析して")}>
+            発言傾向を分析して
+          </button>
         </div>
 
         {error && (
