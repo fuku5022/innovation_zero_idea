@@ -155,12 +155,13 @@ button.active {
   display: flex;
 }
 
+/* クリック領域を20px→32pxに拡大（見た目のドットは中で小さいまま） */
 .note-color-toggle {
   position: absolute;
-  top: -8px;
-  left: -8px;
-  width: 20px;
-  height: 20px;
+  top: -14px;
+  left: -14px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 1px solid #b4b2a9;
   background: white;
@@ -175,16 +176,16 @@ button.active {
 }
 
 .note-color-toggle-dot {
-  width: 10px;
-  height: 10px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: conic-gradient(#EF9F27, #85B7EB, #97C459, #ED93B1, #EF9F27);
 }
 
 .note-color-picker {
   position: absolute;
-  top: -8px;
-  left: 18px;
+  top: -14px;
+  left: 24px;
   z-index: 10;
   background: white;
   border-radius: 8px;
@@ -201,8 +202,8 @@ button.active {
 }
 
 .note-color-preset-btn {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 6px;
   border: 1px solid rgba(0, 0, 0, 0.1);
   padding: 0;
@@ -220,8 +221,8 @@ button.active {
 }
 
 .note-color-custom input[type="color"] {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: none;
   cursor: pointer;
