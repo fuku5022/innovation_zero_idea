@@ -263,6 +263,7 @@ button.active {
   text-align: left;
   border-radius: 12px;
   border: 1px solid #e3f4f4;
+  cursor: pointer;
 }
 
 .home-board-card:hover {
