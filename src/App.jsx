@@ -41,6 +41,7 @@ export default function App() {
   var loaded = boardListState.loaded;
   var createBoard = boardListState.createBoard;
   var deleteBoard = boardListState.deleteBoard;
+  var renameBoard = boardListState.renameBoard;
 
   var [currentBoardId, setCurrentBoardId] = useState(getBoardIdFromUrl);
   var [currentFolder, setCurrentFolder] = useState(null);
@@ -114,6 +115,7 @@ export default function App() {
         onCreateBoard={createBoard}
         onOpenBoard={openBoard}
         onDeleteBoard={deleteBoard}
+        onRenameBoard={renameBoard}
         onBackToFolders={function () {
           setCurrentFolder(null);
         }}
