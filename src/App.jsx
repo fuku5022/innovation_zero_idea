@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useBoard } from "./useBoard.js";
 import { useBoardList } from "./useBoardList.js";
 import { downloadActivityLogAsCsv } from "./csvExport.js";
-import { getSavedAuthRole } from "./auth.js";
+import { getSavedAuthRole, clearAuthRole } from "./auth.js";
 import PasswordGate from "./PasswordGate.jsx";
 import FolderSelect from "./FolderSelect.jsx";
 import Home from "./Home.jsx";
@@ -83,6 +83,13 @@ export default function App() {
     };
   }, [currentBoardId]);
 
+  var handleLogout = useCallback(function () {
+    clearAuthRole();
+    setAuthRole(null);
+    setCurrentFolder(null);
+    goHome();
+  }, [goHome]);
+
   // まだ合言葉を入力していなければ、ゲート画面を表示する。
   if (!authRole) {
     return (
@@ -102,6 +109,7 @@ export default function App() {
         onSelectFolder={function (folder) {
           setCurrentFolder(folder);
         }}
+        onLogout={handleLogout}
       />
     );
   }
@@ -119,6 +127,7 @@ export default function App() {
         onBackToFolders={function () {
           setCurrentFolder(null);
         }}
+        onLogout={handleLogout}
       />
     );
   }
