@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useCallback } from "react";
 import { useBoard } from "./useBoard.js";
 import { useBoardList } from "./useBoardList.js";
+import { downloadActivityLogAsCsv } from "./csvExport.js";
 import Home from "./Home.jsx";
 import StickyNote from "./StickyNote.jsx";
 import LinkLayer from "./LinkLayer.jsx";
@@ -88,10 +89,13 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
     notes,
     links,
     presence,
+    activityLog,
     addNote,
     updateNote,
     deleteNote,
     addLink,
+    uploadNoteImage,
+    removeNoteImage,
     connectionError,
   } = useBoard(boardId, userName, userColor);
 
@@ -109,6 +113,10 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
 
   function handleMove(id, x, y) {
     updateNote(id, { x, y });
+  }
+
+  function handleMoveEnd(id) {
+    updateNote(id, {}, "付箋を移動");
   }
 
   function handleTextChange(id, text) {
@@ -131,6 +139,10 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
   function toggleLinkMode() {
     setLinkMode((v) => !v);
     setLinkFirst(null);
+  }
+
+  function handleExportCsv() {
+    downloadActivityLogAsCsv(activityLog, boardName);
   }
 
   return (
@@ -157,6 +169,7 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
             />
           ))}
         </div>
+        <button onClick={handleExportCsv}>⬇ ログをCSVで保存</button>
         <div className="presence-bar">
           <span>{boardName || boardId}</span>
           {presenceList.map((p, i) => (
@@ -178,9 +191,12 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
               isLinkMode={linkMode}
               isLinkSelected={linkFirst === id}
               onMove={handleMove}
+              onMoveEnd={handleMoveEnd}
               onTextChange={handleTextChange}
               onDelete={handleDelete}
               onClickForLink={handleClickForLink}
+              onUploadImage={uploadNoteImage}
+              onRemoveImage={removeNoteImage}
             />
           ))}
         </div>
