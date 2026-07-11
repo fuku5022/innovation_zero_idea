@@ -3,7 +3,7 @@ import { askGeminiAboutBoard } from "./gemini.js";
 import MarkdownLite from "./MarkdownLite.jsx";
 
 export default function AiAssistModal({ notes, activityLog, aiLog, onSaveAiLog, onClose }) {
-  const [instruction, setInstruction] = useState("要約して");
+  const [instruction, setInstruction] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
   const [error, setError] = useState(false);
@@ -66,7 +66,9 @@ export default function AiAssistModal({ notes, activityLog, aiLog, onSaveAiLog, 
             value={instruction}
             onChange={(e) => setInstruction(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleAsk();
+              if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                handleAsk();
+              }
             }}
             placeholder="例: 要約して / アイデアを3つ出して"
           />
