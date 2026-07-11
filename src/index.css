@@ -399,4 +399,70 @@ button.active {
   margin: 0 0 16px;
 }
 
-.
+.ai-modal-input-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.ai-modal-input-row input {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #cdeeee;
+  font-size: 14px;
+  outline: none;
+}
+
+.ai-modal-input-row input:focus {
+  border-color: #17a2a2;
+}
+
+.ai-modal-input-row button {
+  white-space: nowrap;
+  background: #17a2a2;
+  color: white;
+  border-color: #17a2a2;
+}
+
+.ai-modal-input-row button:hover {
+  background: #128a8a;
+}
+
+.ai-modal-input-row button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.ai-modal-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.ai-modal-presets button {
+  font-size: 12px;
+  padding: 5px 10px;
+}
+
+.ai-modal-error {
+  font-size: 13px;
+  color: #a3423a;
+}
+
+.ai-modal-result {
+  background: #f3fdfd;
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.ai-modal-result p {
+  margin: 0 0 8px;
+}
+
+.ai-modal-result p:last-child {
+  margin-bottom: 0;
+}
