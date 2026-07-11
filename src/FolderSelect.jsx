@@ -1,4 +1,7 @@
-export default function FolderSelect({ role, onSelectFolder }) {
+export default function FolderSelect(props) {
+  var role = props.role;
+  var onSelectFolder = props.onSelectFolder;
+
   return (
     <div className="home-wrapper">
       <div className="home-hero">
@@ -7,25 +10,25 @@ export default function FolderSelect({ role, onSelectFolder }) {
       </div>
 
       <div className="home-list">
-        <button className="folder-card" onClick={() => onSelectFolder("internal")}>
-          <span className="folder-card-icon">🏠</span>
-          <span className="folder-card-body">
-            <span className="folder-card-title">イノゼロ用フォルダ</span>
-            <span className="folder-card-desc">チーム内の議論・作業用ボード</span>
-          </span>
-          <span className="folder-card-arrow">開く →</span>
-        </button>
-
         {role === "internal" && (
-          <button className="folder-card" onClick={() => onSelectFolder("external")}>
-            <span className="folder-card-icon">🌐</span>
+          <button className="folder-card" onClick={function () { onSelectFolder("internal"); }}>
+            <span className="folder-card-icon">🏠</span>
             <span className="folder-card-body">
-              <span className="folder-card-title">外部共有用フォルダ</span>
-              <span className="folder-card-desc">外部の人にも見せてよいボード</span>
+              <span className="folder-card-title">イノゼロ用フォルダ</span>
+              <span className="folder-card-desc">チーム内の議論・作業用ボード</span>
             </span>
             <span className="folder-card-arrow">開く →</span>
           </button>
         )}
+
+        <button className="folder-card" onClick={function () { onSelectFolder("external"); }}>
+          <span className="folder-card-icon">🌐</span>
+          <span className="folder-card-body">
+            <span className="folder-card-title">外部共有用フォルダ</span>
+            <span className="folder-card-desc">外部の人にも見せてよいボード</span>
+          </span>
+          <span className="folder-card-arrow">開く →</span>
+        </button>
       </div>
 
       {role === "external" && (
