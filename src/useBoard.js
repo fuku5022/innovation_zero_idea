@@ -97,19 +97,27 @@ export function useBoard(boardId, userName, userColor) {
   );
 
   const updateNote = useCallback(
-    (id, patch, logLabel) => {
+    (id, patch, logLabel, logDetail = "") => {
       if (!boardId) return;
       const noteRef = ref(db, `boards/${boardId}/notes/${id}`);
       update(noteRef, { ...patch, updatedAt: serverTimestamp() });
       if (logLabel) {
-        logActivity(boardId, userName, logLabel);
+        logActivity(boardId, userName, logLabel, logDetail);
       }
     },
     [boardId, userName]
   );
 
+  const commitTextEdit = useCallback(
+    (id, text) => {
+      if (!boardId) return;
+      logActivity(boardId, userName, "テキストを編集", text || "");
+    },
+    [boardId, userName]
+  );
+
   const deleteNote = useCallback(
-    (id) => {
+    (id, noteText = "") => {
       if (!boardId) return;
       remove(ref(db, `boards/${boardId}/notes/${id}`));
       Object.entries(links).forEach(([linkId, link]) => {
@@ -117,7 +125,7 @@ export function useBoard(boardId, userName, userColor) {
           remove(ref(db, `boards/${boardId}/links/${linkId}`));
         }
       });
-      logActivity(boardId, userName, "付箋を削除");
+      logActivity(boardId, userName, "付箋を削除", noteText);
     },
     [boardId, links, userName]
   );
@@ -138,7 +146,24 @@ export function useBoard(boardId, userName, userColor) {
       if (!boardId) return;
       const noteRef = ref(db, `boards/${boardId}/notes/${id}`);
       update(noteRef, { imageUrl: url || null, updatedAt: serverTimestamp() });
-      logActivity(boardId, userName, url ? "画像を追加" : "画像を削除");
+      logActivity(boardId, userName, url ? "画像を追加" : "画像を削除", url ? "" : "");
+    },
+    [boardId, userName]
+  );
+
+  const toggleReaction = useCallback(
+    (id, currentReactions) => {
+      if (!boardId) return;
+      const reactions = { ...(currentReactions || {}) };
+      const already = reactions[userName];
+      if (already) {
+        delete reactions[userName];
+      } else {
+        reactions[userName] = true;
+      }
+      const noteRef = ref(db, `boards/${boardId}/notes/${id}`);
+      update(noteRef, { reactions, updatedAt: serverTimestamp() });
+      logActivity(boardId, userName, already ? "リアクションを外した" : "👍を付けた");
     },
     [boardId, userName]
   );
@@ -153,6 +178,8 @@ export function useBoard(boardId, userName, userColor) {
     deleteNote,
     addLink,
     setNoteImageUrl,
+    toggleReaction,
+    commitTextEdit,
     boardId,
     connectionError,
   };
