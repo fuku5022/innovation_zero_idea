@@ -1,0 +1,15 @@
+{
+  "rules": {
+    "boards": {
+      "$boardId": {
+        ".read": true,
+        ".write": true,
+        "notes": {
+          "$noteId": {
+            ".validate": "newData.hasChildren(['x', 'y', 'color'])"
+          }
+        }
+      }
+    }
+  }
+}
