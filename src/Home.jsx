@@ -35,8 +35,8 @@ export default function Home({ boardList, loaded, onCreateBoard, onOpenBoard, on
   return (
     <div className="home-wrapper">
       <div className="home-hero">
-        <img src="/logo.png" alt="INNOVATION ZERO" className="home-logo" />
-        <p className="home-subtitle">議題ごとにボードを分けて、みんなでアイデアを整理しよう。</p>
+        <img src="/logo.png" alt="KataBoard" className="home-logo" />
+        <p className="home-subtitle">KataBoard — 議題ごとにボードを分けて、みんなでアイデアを整理しよう。</p>
       </div>
 
       <div className="home-create">
