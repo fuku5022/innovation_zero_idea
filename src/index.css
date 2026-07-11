@@ -350,3 +350,53 @@ button.active {
   font-size: 12px;
   padding: 4px 10px;
 }
+.ai-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(28, 43, 45, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 24px;
+}
+
+.ai-modal {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+}
+
+.ai-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ai-modal-header h2 {
+  font-size: 18px;
+  margin: 0;
+}
+
+.ai-modal-close {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 50%;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.ai-modal-hint {
+  font-size: 13px;
+  color: #4d6b6b;
+  margin: 0 0 16px;
+}
+
+.
