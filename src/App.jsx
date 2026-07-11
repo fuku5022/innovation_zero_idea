@@ -11,10 +11,11 @@ const PRESET_COLORS = ["#EF9F27", "#85B7EB", "#97C459", "#ED93B1"];
 
 function getOrCreateUserName() {
   let name = localStorage.getItem("csb_username");
-  if (!name) {
-    name = window.prompt("あなたの名前を入力してください", "") || "名無しさん";
-    localStorage.setItem("csb_username", name);
+  while (!name || !name.trim()) {
+    const input = window.prompt("あなたの名前を入力してください（空欄では進めません）", "");
+    name = input ? input.trim() : "";
   }
+  localStorage.setItem("csb_username", name);
   return name;
 }
 
