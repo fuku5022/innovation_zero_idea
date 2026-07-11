@@ -108,6 +108,33 @@ export default function App() {
     );
   }
 
+  // 直接URLでボードを開こうとした場合、そのボードが今の役割から
+  // 見えるフォルダに属しているかを確認する。属していなければホームへ戻す。
+  var targetBoard = boardList[currentBoardId];
+  if (loaded && targetBoard) {
+    var boardFolder = targetBoard.folder || "internal";
+    var isAllowed = authRole === "internal" || boardFolder === "external";
+    if (!isAllowed) {
+      return (
+        <div className="gate-wrapper">
+          <div className="gate-card">
+            <img src="/logo.png" alt="Katanova" className="gate-logo" />
+            <p className="gate-hint">このボードを見る権限がありません。</p>
+            <button
+              className="gate-button"
+              onClick={function () {
+                goHome();
+                setCurrentFolder(null);
+              }}
+            >
+              ホームに戻る
+            </button>
+          </div>
+        </div>
+      );
+    }
+  }
+
   return (
     <BoardView
       boardId={currentBoardId}
