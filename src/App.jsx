@@ -36,7 +36,7 @@ function getBoardIdFromUrl() {
 export default function App() {
   const [userName] = useState(getOrCreateUserName);
   const [userColor] = useState(randomColor);
- const { boardList, loaded, createBoard, deleteBoard } = useBoardList();
+  const { boardList, loaded, createBoard, deleteBoard } = useBoardList();
 
   const [currentBoardId, setCurrentBoardId] = useState(getBoardIdFromUrl);
 
@@ -65,12 +65,12 @@ export default function App() {
   if (!currentBoardId) {
     return (
       <Home
-  boardList={boardList}
-  loaded={loaded}
-  onCreateBoard={createBoard}
-  onOpenBoard={openBoard}
-  onDeleteBoard={deleteBoard}
-/>
+        boardList={boardList}
+        loaded={loaded}
+        onCreateBoard={createBoard}
+        onOpenBoard={openBoard}
+        onDeleteBoard={deleteBoard}
+      />
     );
   }
 
@@ -95,8 +95,7 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
     updateNote,
     deleteNote,
     addLink,
-    uploadNoteImage,
-    removeNoteImage,
+    setNoteImageUrl,
     connectionError,
   } = useBoard(boardId, userName, userColor);
 
@@ -196,8 +195,7 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
               onTextChange={handleTextChange}
               onDelete={handleDelete}
               onClickForLink={handleClickForLink}
-              onUploadImage={uploadNoteImage}
-              onRemoveImage={removeNoteImage}
+              onSetImageUrl={setNoteImageUrl}
             />
           ))}
         </div>
