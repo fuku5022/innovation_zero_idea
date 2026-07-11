@@ -80,7 +80,11 @@ export default function StickyNote({
     if (!dragState.current) return;
     const dx = e.clientX - dragState.current.startX;
     const dy = e.clientY - dragState.current.startY;
-    onMove(id, dragState.current.origX + dx, dragState.current.origY + dy);
+    // 座標が0未満（ボードの左・上からはみ出す＝見えなくなる場所）に
+    // ならないようにする。マイナスに行くと戻せなくなるため。
+    const nextX = Math.max(0, dragState.current.origX + dx);
+    const nextY = Math.max(0, dragState.current.origY + dy);
+    onMove(id, nextX, nextY);
   }
 
   function handlePointerUp() {
