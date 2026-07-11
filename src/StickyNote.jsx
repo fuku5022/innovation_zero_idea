@@ -136,6 +136,7 @@ export default function StickyNote({
   function handleCustomColorCommit(hex) {
     setPreviewHex(null);
     onSetColor(id, hex);
+    setShowColorPicker(false);
   }
 
   const currentHex = previewHex || resolveColor(note.color);
