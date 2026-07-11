@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { askGeminiAboutBoard } from "./gemini.js";
+import MarkdownLite from "./MarkdownLite.jsx";
 
 export default function AiAssistModal({ notes, activityLog, aiLog, onSaveAiLog, onClose }) {
   const [instruction, setInstruction] = useState("要約して");
@@ -91,9 +92,7 @@ export default function AiAssistModal({ notes, activityLog, aiLog, onSaveAiLog, 
 
         {result && (
           <div className="ai-modal-result">
-            {result.split("\n").map((line, i) => (
-              <p key={i}>{line}</p>
-            ))}
+            <MarkdownLite text={result} />
           </div>
         )}
 
@@ -118,9 +117,7 @@ export default function AiAssistModal({ notes, activityLog, aiLog, onSaveAiLog, 
                 </div>
                 <p className="ai-modal-history-instruction">「{row.instruction}」</p>
                 <div className="ai-modal-history-result">
-                  {(row.result || "").split("\n").map((line, j) => (
-                    <p key={j}>{line}</p>
-                  ))}
+                  <MarkdownLite text={row.result || ""} />
                 </div>
               </div>
             ))}
