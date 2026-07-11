@@ -276,7 +276,62 @@ button.active {
   color: #1c2b2d;
 }
 
+.home-board-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
 .home-board-arrow {
   font-size: 13px;
   color: #17a2a2;
+}
+
+.home-board-delete {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 50%;
+  border: 1px solid #e3f4f4;
+  background: white;
+  font-size: 14px;
+  line-height: 1;
+  color: #a3423a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-board-delete:hover {
+  background: #fcebeb;
+  border-color: #e0a3a3;
+}
+
+.home-board-confirm {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.home-board-confirm-text {
+  font-size: 13px;
+  color: #7a5310;
+}
+
+.home-board-confirm-yes {
+  font-size: 12px;
+  padding: 4px 10px;
+  background: #e24b4a;
+  color: white;
+  border-color: #e24b4a;
+}
+
+.home-board-confirm-yes:hover {
+  background: #a32d2d;
+  border-color: #a32d2d;
+}
+
+.home-board-confirm-no {
+  font-size: 12px;
+  padding: 4px 10px;
 }
