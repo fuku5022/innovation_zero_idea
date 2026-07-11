@@ -35,12 +35,11 @@ ${notesText || "（付箋はまだありません）"}
 - 堅苦しい定型文や過度に事務的な言い回しは避け、チームメイトに話しかけるような、自然で親しみやすい日本語で回答してください。
 - 依頼の意図を汲み取り、書かれていないことでも文脈から自然に補って構いません。杓子定規に依頼文の表現だけをなぞらないでください。`;
 
-  const response = await fetch(url, {
+ const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
-      tools: [{ google_search: {} }],
     }),
   });
 
