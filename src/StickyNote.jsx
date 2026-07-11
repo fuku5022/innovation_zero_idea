@@ -43,6 +43,10 @@ export default function StickyNote({
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(false);
   const [showColorPicker, setShowColorPicker] = useState(false);
+  // カスタムカラー選択中のプレビュー用の色。
+  // ここに値がある間は、入力中の色をこちらで優先表示し、
+  // まだ保存（onSetColor）はしない。選び終えたタイミングで初めて保存する。
+  const [previewHex, setPreviewHex] = useState(null);
 
   const autoResize = useCallback(() => {
     const el = textareaRef.current;
@@ -117,12 +121,24 @@ export default function StickyNote({
     }
   }
 
+  // プリセットの色ボタンはクリック＝選択が確定するので、そのまま即保存でよい
   function handlePickColor(hex) {
     onSetColor(id, hex);
     setShowColorPicker(false);
   }
 
-  const currentHex = resolveColor(note.color);
+  // カラーピッカーをドラッグしている最中：見た目だけ更新し、まだ保存しない
+  function handleCustomColorInput(hex) {
+    setPreviewHex(hex);
+  }
+
+  // カラーピッカーから指を離した／選び終えたタイミングで、初めて保存する
+  function handleCustomColorCommit(hex) {
+    setPreviewHex(null);
+    onSetColor(id, hex);
+  }
+
+  const currentHex = previewHex || resolveColor(note.color);
   const reactions = note.reactions || {};
   const reactionCount = Object.keys(reactions).length;
   const iReacted = !!reactions[userName];
@@ -182,7 +198,10 @@ export default function StickyNote({
             <input
               type="color"
               value={currentHex}
-              onChange={(e) => handlePickColor(e.target.value)}
+              // ドラッグ中はプレビューだけ更新（保存しない＝ちらつき・誤確定を防ぐ）
+              onChange={(e) => handleCustomColorInput(e.target.value)}
+              // ピッカーを閉じた／選び終えたタイミングで確定保存
+              onBlur={(e) => handleCustomColorCommit(e.target.value)}
             />
           </label>
         </div>
