@@ -1,7 +1,8 @@
 import { useState } from "react";
 
-export default function Home({ boardList, loaded, onCreateBoard, onOpenBoard }) {
+export default function Home({ boardList, loaded, onCreateBoard, onOpenBoard, onDeleteBoard }) {
   const [newBoardName, setNewBoardName] = useState("");
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const boards = Object.entries(boardList).sort(
     (a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0)
@@ -15,10 +16,28 @@ export default function Home({ boardList, loaded, onCreateBoard, onOpenBoard }) 
     onOpenBoard(id);
   }
 
+  function handleDeleteClick(e, id) {
+    e.stopPropagation();
+    setConfirmDeleteId(id);
+  }
+
+  function handleConfirmDelete(e, id) {
+    e.stopPropagation();
+    onDeleteBoard(id);
+    setConfirmDeleteId(null);
+  }
+
+  function handleCancelDelete(e) {
+    e.stopPropagation();
+    setConfirmDeleteId(null);
+  }
+
   return (
     <div className="home-wrapper">
-      <h1>Collab Sticky Board</h1>
-      <p className="home-subtitle">議題ごとにボードを分けて使えます。</p>
+      <div className="home-hero">
+        <img src="/logo.png" alt="INNOVATION ZERO" className="home-logo" />
+        <p className="home-subtitle">議題ごとにボードを分けて、みんなでアイデアを整理しよう。</p>
+      </div>
 
       <div className="home-create">
         <input
@@ -39,14 +58,35 @@ export default function Home({ boardList, loaded, onCreateBoard, onOpenBoard }) 
           <p className="home-empty">まだボードがありません。上から作成してください。</p>
         )}
         {boards.map(([id, board]) => (
-          <button
-            key={id}
-            className="home-board-card"
-            onClick={() => onOpenBoard(id)}
-          >
+          <div key={id} className="home-board-card" onClick={() => onOpenBoard(id)}>
             <span className="home-board-name">{board.name}</span>
-            <span className="home-board-arrow">開く →</span>
-          </button>
+
+            {confirmDeleteId === id ? (
+              <span className="home-board-confirm">
+                <span className="home-board-confirm-text">削除する？</span>
+                <button
+                  className="home-board-confirm-yes"
+                  onClick={(e) => handleConfirmDelete(e, id)}
+                >
+                  削除
+                </button>
+                <button className="home-board-confirm-no" onClick={handleCancelDelete}>
+                  やめる
+                </button>
+              </span>
+            ) : (
+              <span className="home-board-actions">
+                <span className="home-board-arrow">開く →</span>
+                <button
+                  className="home-board-delete"
+                  aria-label="ボードを削除"
+                  onClick={(e) => handleDeleteClick(e, id)}
+                >
+                  ×
+                </button>
+              </span>
+            )}
+          </div>
         ))}
       </div>
     </div>
