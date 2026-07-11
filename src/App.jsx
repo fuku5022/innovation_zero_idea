@@ -36,7 +36,7 @@ function getBoardIdFromUrl() {
 export default function App() {
   const [userName] = useState(getOrCreateUserName);
   const [userColor] = useState(randomColor);
-  const { boardList, loaded, createBoard } = useBoardList();
+ const { boardList, loaded, createBoard, deleteBoard } = useBoardList();
 
   const [currentBoardId, setCurrentBoardId] = useState(getBoardIdFromUrl);
 
@@ -65,11 +65,12 @@ export default function App() {
   if (!currentBoardId) {
     return (
       <Home
-        boardList={boardList}
-        loaded={loaded}
-        onCreateBoard={createBoard}
-        onOpenBoard={openBoard}
-      />
+  boardList={boardList}
+  loaded={loaded}
+  onCreateBoard={createBoard}
+  onOpenBoard={openBoard}
+  onDeleteBoard={deleteBoard}
+/>
     );
   }
 
