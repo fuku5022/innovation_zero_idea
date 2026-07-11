@@ -5,6 +5,7 @@ import { downloadActivityLogAsCsv } from "./csvExport.js";
 import Home from "./Home.jsx";
 import StickyNote from "./StickyNote.jsx";
 import LinkLayer from "./LinkLayer.jsx";
+import AiAssistModal from "./AiAssistModal.jsx";
 
 const PRESET_COLORS = ["#EF9F27", "#85B7EB", "#97C459", "#ED93B1"];
 
@@ -96,6 +97,7 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
   const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
   const [linkMode, setLinkMode] = useState(false);
   const [linkFirst, setLinkFirst] = useState(null);
+  const [showAiModal, setShowAiModal] = useState(false);
 
   const presenceList = useMemo(() => Object.values(presence), [presence]);
 
@@ -175,6 +177,7 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
           </label>
         </div>
         <button onClick={handleExportCsv}>⬇ ログをCSVで保存</button>
+        <button onClick={() => setShowAiModal(true)}>✨ AIに相談</button>
         <div className="presence-bar">
           <span>{boardName || boardId}</span>
           {presenceList.map((p, i) => (
@@ -185,6 +188,9 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
           ))}
         </div>
       </div>
+      {showAiModal && (
+        <AiAssistModal notes={notes} onClose={() => setShowAiModal(false)} />
+      )}
       <div className="board-wrapper">
         <div className="board-inner">
           <LinkLayer notes={notes} links={links} />
