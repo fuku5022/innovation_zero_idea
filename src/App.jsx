@@ -12,6 +12,16 @@ import AiAssistModal from "./AiAssistModal.jsx";
 
 var PRESET_COLORS = ["#EF9F27", "#85B7EB", "#97C459", "#ED93B1"];
 
+// ボードの最小サイズ（付箋が少ない・存在しない場合の下限）
+var MIN_BOARD_WIDTH = 3000;
+var MIN_BOARD_HEIGHT = 2000;
+// 一番端の付箋から、さらにどれだけ余白を持たせて広げておくか
+// （常にこの余白ぶんはドラッグ・新規作成できる「のりしろ」になる）
+var BOARD_MARGIN = 1200;
+// 付箋1個ぶんのだいたいの幅・高さ（座標は付箋の左上基準のため、右端・下端の計算に使う）
+var NOTE_WIDTH = 160;
+var NOTE_HEIGHT = 140;
+
 function getOrCreateUserName() {
   var name = localStorage.getItem("csb_username");
   while (!name || !name.trim()) {
@@ -205,6 +215,24 @@ function BoardView(props) {
     return Object.values(presence);
   }, [presence]);
 
+  // 全付箋の座標から、ボードとして必要な最小の広さを計算する。
+  // 一番右・一番下にある付箋の位置 + 余白（BOARD_MARGIN）を基準に、
+  // 付箋を端の方に動かすたびにボードがどんどん広がっていく仕組み。
+  var boardSize = useMemo(function () {
+    var maxRight = 0;
+    var maxBottom = 0;
+    Object.values(notes).forEach(function (note) {
+      var right = (note.x || 0) + NOTE_WIDTH;
+      var bottom = (note.y || 0) + NOTE_HEIGHT;
+      if (right > maxRight) maxRight = right;
+      if (bottom > maxBottom) maxBottom = bottom;
+    });
+    return {
+      width: Math.max(MIN_BOARD_WIDTH, maxRight + BOARD_MARGIN),
+      height: Math.max(MIN_BOARD_HEIGHT, maxBottom + BOARD_MARGIN),
+    };
+  }, [notes]);
+
   var matchedNoteIds = useMemo(function () {
     var term = searchTerm.trim().toLowerCase();
     if (!term) return null;
@@ -346,7 +374,10 @@ function BoardView(props) {
         />
       )}
       <div className="board-wrapper">
-        <div className="board-inner">
+        <div
+          className="board-inner"
+          style={{ width: boardSize.width, height: boardSize.height }}
+        >
           <LinkLayer notes={notes} links={links} onDeleteLink={deleteLink} />
           {Object.entries(notes).map(function (entry) {
             var id = entry[0];
