@@ -27,6 +27,7 @@ export function useBoard(boardId, userName, userColor) {
   const [links, setLinks] = useState({});
   const [presence, setPresence] = useState({});
   const [activityLog, setActivityLog] = useState({});
+  const [aiLog, setAiLog] = useState({});
   const [connectionError, setConnectionError] = useState(false);
 
   useEffect(() => {
@@ -35,6 +36,7 @@ export function useBoard(boardId, userName, userColor) {
     const linksRef = ref(db, `boards/${boardId}/links`);
     const presenceRef = ref(db, `boards/${boardId}/presence`);
     const logRef = ref(db, `boards/${boardId}/activityLog`);
+    const aiLogRef = ref(db, `boards/${boardId}/aiLog`);
 
     const onError = () => setConnectionError(true);
 
@@ -58,6 +60,11 @@ export function useBoard(boardId, userName, userColor) {
       (snap) => setActivityLog(snap.val() || {}),
       onError
     );
+    const unsubAiLog = onValue(
+      aiLogRef,
+      (snap) => setAiLog(snap.val() || {}),
+      onError
+    );
 
     const myPresenceRef = push(presenceRef);
     set(myPresenceRef, {
@@ -72,6 +79,7 @@ export function useBoard(boardId, userName, userColor) {
       unsubLinks();
       unsubPresence();
       unsubLog();
+      unsubAiLog();
       remove(myPresenceRef);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -168,11 +176,28 @@ export function useBoard(boardId, userName, userColor) {
     [boardId, userName]
   );
 
+  const saveAiLog = useCallback(
+    (instruction, resultText) => {
+      if (!boardId) return;
+      const logRef = push(ref(db, `boards/${boardId}/aiLog`));
+      set(logRef, {
+        userName,
+        instruction,
+        result: resultText,
+        timestamp: serverTimestamp(),
+        clientTime: new Date().toISOString(),
+      });
+      logActivity(boardId, userName, "AIに相談", instruction);
+    },
+    [boardId, userName]
+  );
+
   return {
     notes,
     links,
     presence,
     activityLog,
+    aiLog,
     addNote,
     updateNote,
     deleteNote,
@@ -180,6 +205,7 @@ export function useBoard(boardId, userName, userColor) {
     setNoteImageUrl,
     toggleReaction,
     commitTextEdit,
+    saveAiLog,
     boardId,
     connectionError,
   };
