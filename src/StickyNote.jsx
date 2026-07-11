@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
+import { uploadImageToCloudinary } from "./cloudinary.js";
 
 const COLOR_HEX = {
   amber: "#EF9F27",
@@ -17,19 +18,32 @@ export default function StickyNote({
   onTextChange,
   onDelete,
   onClickForLink,
-  onUploadImage,
-  onRemoveImage,
+  onSetImageUrl,
 }) {
   const dragState = useRef(null);
+  const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
   const [dragging, setDragging] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(false);
+
+  const autoResize = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, []);
+
+  useEffect(() => {
+    autoResize();
+  }, [note.text, note.imageUrl, autoResize]);
 
   function handlePointerDown(e) {
     if (isLinkMode) {
       onClickForLink(id);
       return;
     }
-    if (["TEXTAREA", "BUTTON", "IMG"].includes(e.target.tagName)) return;
+    if (["TEXTAREA", "BUTTON", "IMG", "INPUT"].includes(e.target.tagName)) return;
 
     dragState.current = {
       startX: e.clientX,
@@ -57,12 +71,21 @@ export default function StickyNote({
     }
   }
 
-  function handleFileChange(e) {
+  async function handleFileChange(e) {
     const file = e.target.files?.[0];
-    if (file) {
-      onUploadImage(id, file);
-    }
     e.target.value = "";
+    if (!file) return;
+
+    setUploading(true);
+    setUploadError(false);
+    try {
+      const url = await uploadImageToCloudinary(file);
+      onSetImageUrl(id, url);
+    } catch (err) {
+      setUploadError(true);
+    } finally {
+      setUploading(false);
+    }
   }
 
   return (
@@ -97,7 +120,7 @@ export default function StickyNote({
             aria-label="画像を削除"
             onClick={(e) => {
               e.stopPropagation();
-              onRemoveImage(id);
+              onSetImageUrl(id, null);
             }}
           >
             ×
@@ -106,23 +129,30 @@ export default function StickyNote({
       )}
 
       <textarea
+        ref={textareaRef}
         value={note.text || ""}
         placeholder="アイデアをここに"
-        onChange={(e) => onTextChange(id, e.target.value)}
+        onChange={(e) => {
+          onTextChange(id, e.target.value);
+          autoResize();
+        }}
         onPointerDown={(e) => e.stopPropagation()}
+        rows={1}
       />
 
       {!note.imageUrl && (
         <button
           className="note-image-add"
+          disabled={uploading}
           onClick={(e) => {
             e.stopPropagation();
             fileInputRef.current?.click();
           }}
         >
-          ＋画像
+          {uploading ? "アップロード中..." : "＋画像"}
         </button>
       )}
+      {uploadError && <p className="note-image-error">失敗しました。もう一度お試しください</p>}
       <input
         ref={fileInputRef}
         type="file"
