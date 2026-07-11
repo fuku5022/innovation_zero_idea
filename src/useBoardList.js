@@ -1,9 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { db } from "./firebase.js";
-import { ref, onValue, set, push, serverTimestamp } from "firebase/database";
+import { ref, onValue, set, push, remove, serverTimestamp } from "firebase/database";
 
-// すべてのボード（議題ごとのホワイトボード）の一覧を管理するフック。
-// ホーム画面で「新しいボードを作る」「既存のボードを開く」ために使う。
 export function useBoardList() {
   const [boardList, setBoardList] = useState({});
   const [loaded, setLoaded] = useState(false);
@@ -27,5 +25,10 @@ export function useBoardList() {
     return newRef.key;
   }, []);
 
-  return { boardList, loaded, createBoard };
+  const deleteBoard = useCallback((id) => {
+    remove(ref(db, `boardList/${id}`));
+    remove(ref(db, `boards/${id}`));
+  }, []);
+
+  return { boardList, loaded, createBoard, deleteBoard };
 }
