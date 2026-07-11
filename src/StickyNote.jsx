@@ -1,12 +1,20 @@
 import { useRef, useState, useEffect, useCallback } from "react";
 import { uploadImageToCloudinary } from "./cloudinary.js";
 
-const COLOR_HEX = {
+const PRESET_COLORS = ["#EF9F27", "#85B7EB", "#97C459", "#ED93B1"];
+
+const LEGACY_COLOR_HEX = {
   amber: "#EF9F27",
   blue: "#85B7EB",
   green: "#97C459",
   pink: "#ED93B1",
 };
+
+function resolveColor(color) {
+  if (!color) return LEGACY_COLOR_HEX.amber;
+  if (color.startsWith("#")) return color;
+  return LEGACY_COLOR_HEX[color] || LEGACY_COLOR_HEX.amber;
+}
 
 export default function StickyNote({
   id,
@@ -19,6 +27,7 @@ export default function StickyNote({
   onDelete,
   onClickForLink,
   onSetImageUrl,
+  onSetColor,
 }) {
   const dragState = useRef(null);
   const textareaRef = useRef(null);
@@ -26,6 +35,7 @@ export default function StickyNote({
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(false);
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   const autoResize = useCallback(() => {
     const el = textareaRef.current;
@@ -88,13 +98,20 @@ export default function StickyNote({
     }
   }
 
+  function handlePickColor(hex) {
+    onSetColor(id, hex);
+    setShowColorPicker(false);
+  }
+
+  const currentHex = resolveColor(note.color);
+
   return (
     <div
       className={`sticky-note${isLinkSelected ? " link-selected" : ""}`}
       style={{
         left: note.x,
         top: note.y,
-        background: COLOR_HEX[note.color] || COLOR_HEX.amber,
+        background: currentHex,
         cursor: isLinkMode ? "pointer" : dragging ? "grabbing" : "grab",
       }}
       onPointerDown={handlePointerDown}
@@ -112,54 +129,39 @@ export default function StickyNote({
         ×
       </button>
 
-      {note.imageUrl && (
-        <div className="note-image-wrapper">
-          <img src={note.imageUrl} alt="" className="note-image" />
-          <button
-            className="note-image-remove"
-            aria-label="画像を削除"
-            onClick={(e) => {
-              e.stopPropagation();
-              onSetImageUrl(id, null);
-            }}
-          >
-            ×
-          </button>
+      <button
+        className="note-color-toggle"
+        aria-label="色を変更"
+        onClick={(e) => {
+          e.stopPropagation();
+          setShowColorPicker((v) => !v);
+        }}
+      >
+        <span className="note-color-toggle-dot" />
+      </button>
+
+      {showColorPicker && (
+        <div className="note-color-picker" onPointerDown={(e) => e.stopPropagation()}>
+          <div className="note-color-presets">
+            {PRESET_COLORS.map((hex) => (
+              <button
+                key={hex}
+                className="note-color-preset-btn"
+                style={{ background: hex }}
+                onClick={() => handlePickColor(hex)}
+              />
+            ))}
+          </div>
+          <label className="note-color-custom">
+            自由な色
+            <input
+              type="color"
+              value={currentHex}
+              onChange={(e) => handlePickColor(e.target.value)}
+            />
+          </label>
         </div>
       )}
 
-      <textarea
-        ref={textareaRef}
-        value={note.text || ""}
-        placeholder="アイデアをここに"
-        onChange={(e) => {
-          onTextChange(id, e.target.value);
-          autoResize();
-        }}
-        onPointerDown={(e) => e.stopPropagation()}
-        rows={1}
-      />
-
-      {!note.imageUrl && (
-        <button
-          className="note-image-add"
-          disabled={uploading}
-          onClick={(e) => {
-            e.stopPropagation();
-            fileInputRef.current?.click();
-          }}
-        >
-          {uploading ? "アップロード中..." : "＋画像"}
-        </button>
-      )}
-      {uploadError && <p className="note-image-error">失敗しました。もう一度お試しください</p>}
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        style={{ display: "none" }}
-        onChange={handleFileChange}
-      />
-    </div>
-  );
-}
+      {note.imageUrl && (
+        <div
