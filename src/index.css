@@ -83,6 +83,8 @@ button.active {
   box-shadow: 0 2px 8px rgba(23, 162, 162, 0.15);
   white-space: pre-wrap;
   word-break: break-word;
+  display: flex;
+  flex-direction: column;
 }
 
 .sticky-note:active {
@@ -95,13 +97,14 @@ button.active {
 
 .sticky-note textarea {
   width: 100%;
-  height: 90px;
+  min-height: 60px;
   border: none;
   background: transparent;
   resize: none;
   font: inherit;
   color: inherit;
   outline: none;
+  overflow: hidden;
 }
 
 .note-delete {
@@ -162,6 +165,17 @@ button.active {
   margin-top: 4px;
   background: rgba(255, 255, 255, 0.6);
   border: 1px dashed #888780;
+}
+
+.note-image-add:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.note-image-error {
+  font-size: 10px;
+  color: #a3423a;
+  margin: 4px 0 0;
 }
 
 .presence-bar {
