@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from "react";
 import { db } from "./firebase.js";
-import { ref, onValue, set, push, remove, serverTimestamp } from "firebase/database";
+import { ref, onValue, set, push, remove, update, serverTimestamp } from "firebase/database";
 
 // すべてのボード（議題ごとのホワイトボード）の一覧を管理するフック。
-// ホーム画面で「新しいボードを作る」「既存のボードを開く」「削除する」ために使う。
+// ホーム画面で「新しいボードを作る」「既存のボードを開く」「削除する」「名前を変える」ために使う。
 // 各ボードには folder フィールド（"internal" または "external"）を持たせて、
 // 見せる範囲を分けられるようにしている。
 // 既存の古いデータ（folderフィールドが無いもの）は、互換性のため internal 扱いにする。
@@ -48,5 +48,10 @@ export function useBoardList() {
     remove(ref(db, "boards/" + id));
   }, []);
 
-  return { boardList, loaded, createBoard, deleteBoard };
+  // ボードの名前だけを変更する。
+  const renameBoard = useCallback((id, newName) => {
+    update(ref(db, "boardList/" + id), { name: newName });
+  }, []);
+
+  return { boardList, loaded, createBoard, deleteBoard, renameBoard };
 }
