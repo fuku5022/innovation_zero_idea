@@ -21,17 +21,22 @@ export default function StickyNote({
   note,
   isLinkMode,
   isLinkSelected,
+  isDimmed,
   onMove,
   onMoveEnd,
   onTextChange,
+  onTextCommit,
   onDelete,
   onClickForLink,
   onSetImageUrl,
   onSetColor,
+  onToggleReaction,
+  userName,
 }) {
   const dragState = useRef(null);
   const textareaRef = useRef(null);
   const fileInputRef = useRef(null);
+  const textAtFocusRef = useRef(note.text || "");
   const [dragging, setDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(false);
@@ -81,6 +86,16 @@ export default function StickyNote({
     }
   }
 
+  function handleTextFocus() {
+    textAtFocusRef.current = note.text || "";
+  }
+
+  function handleTextBlur() {
+    if (textAtFocusRef.current !== (note.text || "") && onTextCommit) {
+      onTextCommit(id);
+    }
+  }
+
   async function handleFileChange(e) {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -104,10 +119,13 @@ export default function StickyNote({
   }
 
   const currentHex = resolveColor(note.color);
+  const reactions = note.reactions || {};
+  const reactionCount = Object.keys(reactions).length;
+  const iReacted = !!reactions[userName];
 
   return (
     <div
-      className={`sticky-note${isLinkSelected ? " link-selected" : ""}`}
+      className={`sticky-note${isLinkSelected ? " link-selected" : ""}${isDimmed ? " dimmed" : ""}`}
       style={{
         left: note.x,
         top: note.y,
@@ -187,22 +205,36 @@ export default function StickyNote({
           onTextChange(id, e.target.value);
           autoResize();
         }}
+        onFocus={handleTextFocus}
+        onBlur={handleTextBlur}
         onPointerDown={(e) => e.stopPropagation()}
         rows={1}
       />
 
-      {!note.imageUrl && (
+      <div className="note-footer">
         <button
-          className="note-image-add"
-          disabled={uploading}
+          className={`note-reaction${iReacted ? " reacted" : ""}`}
           onClick={(e) => {
             e.stopPropagation();
-            fileInputRef.current?.click();
+            onToggleReaction(id, reactions);
           }}
         >
-          {uploading ? "アップロード中..." : "＋画像"}
+          👍 {reactionCount > 0 ? reactionCount : ""}
         </button>
-      )}
+
+        {!note.imageUrl && (
+          <button
+            className="note-image-add"
+            disabled={uploading}
+            onClick={(e) => {
+              e.stopPropagation();
+              fileInputRef.current?.click();
+            }}
+          >
+            {uploading ? "アップロード中..." : "＋画像"}
+          </button>
+        )}
+      </div>
       {uploadError && <p className="note-image-error">失敗しました。もう一度お試しください</p>}
       <input
         ref={fileInputRef}
