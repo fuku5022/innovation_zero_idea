@@ -44,6 +44,7 @@ export default function App() {
 
   var [currentBoardId, setCurrentBoardId] = useState(getBoardIdFromUrl);
   var [currentFolder, setCurrentFolder] = useState(null);
+  var [boardCheckReady, setBoardCheckReady] = useState(false);
 
   var openBoard = useCallback(function (id) {
     setCurrentBoardId(id);
@@ -68,6 +69,18 @@ export default function App() {
       window.removeEventListener("popstate", handlePopState);
     };
   }, []);
+
+  useEffect(function () {
+    setBoardCheckReady(false);
+    if (!currentBoardId) return;
+    // boardListの反映に多少のタイムラグがあるため、少し待ってから判定する。
+    var timer = setTimeout(function () {
+      setBoardCheckReady(true);
+    }, 400);
+    return function () {
+      clearTimeout(timer);
+    };
+  }, [currentBoardId]);
 
   // まだ合言葉を入力していなければ、ゲート画面を表示する。
   if (!authRole) {
@@ -107,20 +120,6 @@ export default function App() {
       />
     );
   }
-
-  var [boardCheckReady, setBoardCheckReady] = useState(false);
-
-  useEffect(function () {
-    setBoardCheckReady(false);
-    if (!currentBoardId) return;
-    // boardListの反映に多少のタイムラグがあるため、少し待ってから判定する。
-    var timer = setTimeout(function () {
-      setBoardCheckReady(true);
-    }, 400);
-    return function () {
-      clearTimeout(timer);
-    };
-  }, [currentBoardId]);
 
   // 直接URLでボードを開こうとした場合、そのボードが今の役割から
   // 見えるフォルダに属しているかを確認する。属していなければホームへ戻す。
