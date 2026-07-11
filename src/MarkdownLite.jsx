@@ -2,18 +2,23 @@
 // 外部ライブラリを追加せず、必要な範囲だけを簡易的にHTML風の見た目に変換する。
 
 function renderInline(text, keyPrefix) {
-  // [表示テキスト](URL) をクリック可能なリンクに、**太字** を <strong> に変換する。
-  // 両方が混在する行にも対応するため、まずリンクで分割してから、それぞれの断片で太字を処理する。
-  const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+  // [表示テキスト](URL) と、裸のURL（https://...）の両方をクリック可能なリンクにする。
+  // **太字** を <strong> に変換する処理と合わせて、まずリンクで分割してから太字を処理する。
+  const combinedPattern =
+    /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)|(https?:\/\/[^\s)、。「」]+)/g;
   const segments = [];
   let lastIndex = 0;
   let match;
 
-  while ((match = linkPattern.exec(text)) !== null) {
+  while ((match = combinedPattern.exec(text)) !== null) {
     if (match.index > lastIndex) {
       segments.push({ type: "text", value: text.slice(lastIndex, match.index) });
     }
-    segments.push({ type: "link", label: match[1], url: match[2] });
+    if (match[1] !== undefined) {
+      segments.push({ type: "link", label: match[1], url: match[2] });
+    } else {
+      segments.push({ type: "link", label: match[3], url: match[3] });
+    }
     lastIndex = match.index + match[0].length;
   }
   if (lastIndex < text.length) {
@@ -23,7 +28,7 @@ function renderInline(text, keyPrefix) {
   return segments.map((seg, segIndex) => {
     if (seg.type === "link") {
       return (
-        <a
+        
           key={`${keyPrefix}-link-${segIndex}`}
           href={seg.url}
           target="_blank"
@@ -34,7 +39,6 @@ function renderInline(text, keyPrefix) {
         </a>
       );
     }
-    // **太字** を <strong> に変換する
     const parts = seg.value.split(/(\*\*[^*]+\*\*)/g);
     return parts.map((part, i) => {
       if (part.startsWith("**") && part.endsWith("**")) {
@@ -80,7 +84,6 @@ export default function MarkdownLite({ text }) {
       flushList(i);
       const level = headingMatch[1].length;
       const content = headingMatch[2];
-      const Tag = `md-h${Math.min(level, 4)}`;
       elements.push(
         <p className={`md-heading md-heading-${level}`} key={`h-${i}`}>
           {renderInline(content, `h-${i}`)}
