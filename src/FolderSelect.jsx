@@ -1,6 +1,7 @@
 export default function FolderSelect(props) {
   var role = props.role;
   var onSelectFolder = props.onSelectFolder;
+  var onLogout = props.onLogout;
 
   return (
     <div className="home-wrapper">
@@ -35,6 +36,12 @@ export default function FolderSelect(props) {
         <p className="folder-note">
           外部共有用のアカウントでログインしています。表示できるのは共有フォルダのみです。
         </p>
+      )}
+
+      {onLogout && (
+        <button className="home-back logout-button" onClick={onLogout}>
+          ログアウト
+        </button>
       )}
     </div>
   );
