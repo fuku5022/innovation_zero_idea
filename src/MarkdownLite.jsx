@@ -2,8 +2,6 @@
 // 外部ライブラリを追加せず、必要な範囲だけを簡易的にHTML風の見た目に変換する。
 
 function renderInline(text, keyPrefix) {
-  // [表示テキスト](URL) をクリック可能なリンクに、**太字** を <strong> に変換する。
-  // 両方が混在する行にも対応するため、まずリンクで分割してから、それぞれの断片で太字を処理する。
   const linkPattern = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
   const segments = [];
   let lastIndex = 0;
@@ -20,11 +18,11 @@ function renderInline(text, keyPrefix) {
     segments.push({ type: "text", value: text.slice(lastIndex) });
   }
 
-  return segments.map((seg, segIndex) => {
+  return segments.map(function (seg, segIndex) {
     if (seg.type === "link") {
       return (
         
-          key={`${keyPrefix}-link-${segIndex}`}
+          key={keyPrefix + "-link-" + segIndex}
           href={seg.url}
           target="_blank"
           rel="noopener noreferrer"
@@ -35,13 +33,15 @@ function renderInline(text, keyPrefix) {
       );
     }
     const parts = seg.value.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((part, i) => {
-      if (part.startsWith("**") && part.endsWith("**")) {
+    return parts.map(function (part, i) {
+      if (part.indexOf("**") === 0 && part.lastIndexOf("**") === part.length - 2) {
         return (
-          <strong key={`${keyPrefix}-${segIndex}-${i}`}>{part.slice(2, -2)}</strong>
+          <strong key={keyPrefix + "-" + segIndex + "-" + i}>
+            {part.slice(2, -2)}
+          </strong>
         );
       }
-      return <span key={`${keyPrefix}-${segIndex}-${i}`}>{part}</span>;
+      return <span key={keyPrefix + "-" + segIndex + "-" + i}>{part}</span>;
     });
   });
 }
@@ -56,17 +56,17 @@ export default function MarkdownLite({ text }) {
   function flushList(key) {
     if (listBuffer.length > 0) {
       elements.push(
-        <ul className="md-list" key={`list-${key}`}>
-          {listBuffer.map((item, i) => (
-            <li key={i}>{renderInline(item, `li-${key}-${i}`)}</li>
-          ))}
+        <ul className="md-list" key={"list-" + key}>
+          {listBuffer.map(function (item, i) {
+            return <li key={i}>{renderInline(item, "li-" + key + "-" + i)}</li>;
+          })}
         </ul>
       );
       listBuffer = [];
     }
   }
 
-  lines.forEach((line, i) => {
+  lines.forEach(function (line, i) {
     const trimmed = line.trim();
 
     if (!trimmed) {
@@ -80,8 +80,8 @@ export default function MarkdownLite({ text }) {
       const level = headingMatch[1].length;
       const content = headingMatch[2];
       elements.push(
-        <p className={`md-heading md-heading-${level}`} key={`h-${i}`}>
-          {renderInline(content, `h-${i}`)}
+        <p className={"md-heading md-heading-" + level} key={"h-" + i}>
+          {renderInline(content, "h-" + i)}
         </p>
       );
       return;
@@ -94,7 +94,7 @@ export default function MarkdownLite({ text }) {
     }
 
     flushList(i);
-    elements.push(<p key={`p-${i}`}>{renderInline(trimmed, `p-${i}`)}</p>);
+    elements.push(<p key={"p-" + i}>{renderInline(trimmed, "p-" + i)}</p>);
   });
 
   flushList("end");
