@@ -158,11 +158,37 @@ button.active {
   justify-content: center;
 }
 
+.sticky-note.dimmed {
+  opacity: 0.25;
+}
+
+.note-footer {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.note-reaction {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  flex-shrink: 0;
+}
+
+.note-reaction.reacted {
+  background: #ffe9b3;
+  border-color: #d8a92f;
+}
+
 .note-image-add {
-  width: 100%;
+  flex: 1;
+  width: auto;
   font-size: 11px;
   padding: 4px 8px;
-  margin-top: 4px;
+  margin-top: 0;
   background: rgba(255, 255, 255, 0.6);
   border: 1px dashed #888780;
 }
@@ -176,6 +202,19 @@ button.active {
   font-size: 10px;
   color: #a3423a;
   margin: 4px 0 0;
+}
+
+.search-input {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #d3ecec;
+  font-size: 13px;
+  outline: none;
+  width: 160px;
+}
+
+.search-input:focus {
+  border-color: #17a2a2;
 }
 
 .presence-bar {
