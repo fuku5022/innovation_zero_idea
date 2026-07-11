@@ -14,6 +14,7 @@ export default function Home(props) {
   var onDeleteBoard = props.onDeleteBoard;
   var onRenameBoard = props.onRenameBoard;
   var onBackToFolders = props.onBackToFolders;
+  var onLogout = props.onLogout;
 
   var [newBoardName, setNewBoardName] = useState("");
   var [confirmDeleteId, setConfirmDeleteId] = useState(null);
@@ -86,6 +87,12 @@ export default function Home(props) {
       {onBackToFolders && (
         <button className="home-back" onClick={onBackToFolders}>
           ← フォルダ選択に戻る
+        </button>
+      )}
+
+      {onLogout && (
+        <button className="home-back logout-button" onClick={onLogout}>
+          ログアウト
         </button>
       )}
 
