@@ -12,10 +12,13 @@ export default function Home(props) {
   var onCreateBoard = props.onCreateBoard;
   var onOpenBoard = props.onOpenBoard;
   var onDeleteBoard = props.onDeleteBoard;
+  var onRenameBoard = props.onRenameBoard;
   var onBackToFolders = props.onBackToFolders;
 
   var [newBoardName, setNewBoardName] = useState("");
   var [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  var [editingId, setEditingId] = useState(null);
+  var [editingName, setEditingName] = useState("");
 
   var boards = Object.entries(boardList)
     .filter(function (entry) {
@@ -47,6 +50,28 @@ export default function Home(props) {
   function handleCancelDelete(e) {
     e.stopPropagation();
     setConfirmDeleteId(null);
+  }
+
+  function handleStartEdit(e, id, currentName) {
+    e.stopPropagation();
+    setEditingId(id);
+    setEditingName(currentName);
+  }
+
+  function handleSaveEdit(e, id) {
+    if (e) e.stopPropagation();
+    var trimmed = editingName.trim();
+    if (trimmed && onRenameBoard) {
+      onRenameBoard(id, trimmed);
+    }
+    setEditingId(null);
+    setEditingName("");
+  }
+
+  function handleCancelEdit(e) {
+    if (e) e.stopPropagation();
+    setEditingId(null);
+    setEditingName("");
   }
 
   return (
@@ -89,9 +114,36 @@ export default function Home(props) {
         {boards.map(function (entry) {
           var id = entry[0];
           var board = entry[1];
+          var isEditing = editingId === id;
+
           return (
-            <div key={id} className="home-board-card" onClick={function () { onOpenBoard(id); }}>
-              <span className="home-board-name">{board.name}</span>
+            <div
+              key={id}
+              className="home-board-card"
+              onClick={function () {
+                if (!isEditing) onOpenBoard(id);
+              }}
+            >
+              {isEditing ? (
+                <input
+                  type="text"
+                  className="home-board-name-input"
+                  value={editingName}
+                  autoFocus
+                  onClick={function (e) { e.stopPropagation(); }}
+                  onChange={function (e) { setEditingName(e.target.value); }}
+                  onKeyDown={function (e) {
+                    if (e.key === "Enter" && !e.nativeEvent.isComposing) {
+                      handleSaveEdit(e, id);
+                    }
+                    if (e.key === "Escape") {
+                      handleCancelEdit(e);
+                    }
+                  }}
+                />
+              ) : (
+                <span className="home-board-name">{board.name}</span>
+              )}
 
               {confirmDeleteId === id ? (
                 <span className="home-board-confirm">
@@ -106,9 +158,28 @@ export default function Home(props) {
                     やめる
                   </button>
                 </span>
+              ) : isEditing ? (
+                <span className="home-board-actions">
+                  <button
+                    className="home-board-save"
+                    onClick={function (e) { handleSaveEdit(e, id); }}
+                  >
+                    保存
+                  </button>
+                  <button className="home-board-cancel" onClick={handleCancelEdit}>
+                    やめる
+                  </button>
+                </span>
               ) : (
                 <span className="home-board-actions">
                   <span className="home-board-arrow">開く →</span>
+                  <button
+                    className="home-board-edit"
+                    aria-label="ボード名を編集"
+                    onClick={function (e) { handleStartEdit(e, id, board.name); }}
+                  >
+                    ✎
+                  </button>
                   <button
                     className="home-board-delete"
                     aria-label="ボードを削除"
