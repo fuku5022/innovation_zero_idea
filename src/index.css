@@ -855,6 +855,14 @@ button.active {
   color: #17a2a2;
 }
 
+.logout-button {
+  color: #a3423a;
+}
+
+.logout-button:hover {
+  color: #7a2e28;
+}
+
 .folder-card {
   display: flex;
   align-items: center;
