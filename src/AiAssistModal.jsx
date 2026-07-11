@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { askGeminiAboutBoard } from "./gemini.js";
+
+const COOLDOWN_MS = 8000;
 
 export default function AiAssistModal({ notes, onClose }) {
   const [instruction, setInstruction] = useState("要約して");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
   const [error, setError] = useState(false);
+  const [cooldown, setCooldown] = useState(false);
+  const lastRequestRef = useRef(0);
 
   const notesText = Object.values(notes)
     .map((n) => n.text)
@@ -15,9 +19,19 @@ export default function AiAssistModal({ notes, onClose }) {
 
   async function handleAsk() {
     if (!instruction.trim()) return;
+
+    const now = Date.now();
+    if (now - lastRequestRef.current < COOLDOWN_MS) {
+      setError(true);
+      setResult("");
+      return;
+    }
+    lastRequestRef.current = now;
+
     setLoading(true);
     setError(false);
     setResult("");
+    setCooldown(true);
     try {
       const text = await askGeminiAboutBoard(notesText, instruction.trim());
       setResult(text);
@@ -25,6 +39,7 @@ export default function AiAssistModal({ notes, onClose }) {
       setError(true);
     } finally {
       setLoading(false);
+      setTimeout(() => setCooldown(false), COOLDOWN_MS);
     }
   }
 
@@ -52,8 +67,8 @@ export default function AiAssistModal({ notes, onClose }) {
             }}
             placeholder="例: 要約して / アイデアを3つ出して"
           />
-          <button onClick={handleAsk} disabled={loading}>
-            {loading ? "考え中..." : "聞く"}
+          <button onClick={handleAsk} disabled={loading || cooldown}>
+            {loading ? "考え中..." : cooldown ? "少し待って..." : "聞く"}
           </button>
         </div>
 
@@ -65,7 +80,7 @@ export default function AiAssistModal({ notes, onClose }) {
 
         {error && (
           <p className="ai-modal-error">
-            うまく回答が得られませんでした。もう一度お試しください。
+            うまく回答が得られませんでした。混み合っている可能性があるので、少し時間を置いてもう一度お試しください。
           </p>
         )}
 
