@@ -108,10 +108,24 @@ export default function App() {
     );
   }
 
+  var [boardCheckReady, setBoardCheckReady] = useState(false);
+
+  useEffect(function () {
+    setBoardCheckReady(false);
+    if (!currentBoardId) return;
+    // boardListの反映に多少のタイムラグがあるため、少し待ってから判定する。
+    var timer = setTimeout(function () {
+      setBoardCheckReady(true);
+    }, 400);
+    return function () {
+      clearTimeout(timer);
+    };
+  }, [currentBoardId]);
+
   // 直接URLでボードを開こうとした場合、そのボードが今の役割から
   // 見えるフォルダに属しているかを確認する。属していなければホームへ戻す。
   var targetBoard = boardList[currentBoardId];
-  if (loaded && targetBoard) {
+  if (loaded && boardCheckReady && targetBoard) {
     var boardFolder = targetBoard.folder || "internal";
     var isAllowed = authRole === "internal" || boardFolder === "external";
     if (!isAllowed) {
