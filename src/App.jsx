@@ -91,6 +91,8 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
     deleteNote,
     addLink,
     setNoteImageUrl,
+    toggleReaction,
+    commitTextEdit,
     connectionError,
   } = useBoard(boardId, userName, userColor);
 
@@ -98,8 +100,19 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
   const [linkMode, setLinkMode] = useState(false);
   const [linkFirst, setLinkFirst] = useState(null);
   const [showAiModal, setShowAiModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const presenceList = useMemo(() => Object.values(presence), [presence]);
+
+  const matchedNoteIds = useMemo(() => {
+    const term = searchTerm.trim().toLowerCase();
+    if (!term) return null;
+    return new Set(
+      Object.entries(notes)
+        .filter(([, note]) => (note.text || "").toLowerCase().includes(term))
+        .map(([id]) => id)
+    );
+  }, [notes, searchTerm]);
 
   function handleAddNote() {
     const x = 80 + Math.random() * 400;
@@ -119,12 +132,22 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
     updateNote(id, { text });
   }
 
+  function handleTextCommit(id) {
+    const text = notes[id]?.text || "";
+    commitTextEdit(id, text);
+  }
+
   function handleDelete(id) {
-    deleteNote(id);
+    const text = notes[id]?.text || "";
+    deleteNote(id, text);
   }
 
   function handleSetColor(id, hex) {
     updateNote(id, { color: hex }, "色を変更");
+  }
+
+  function handleToggleReaction(id, reactions) {
+    toggleReaction(id, reactions);
   }
 
   function handleClickForLink(id) {
@@ -176,6 +199,13 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
             />
           </label>
         </div>
+        <input
+          type="text"
+          className="search-input"
+          placeholder="🔍 付箋を検索"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
         <button onClick={handleExportCsv}>⬇ ログをCSVで保存</button>
         <button onClick={() => setShowAiModal(true)}>✨ AIに相談</button>
         <div className="presence-bar">
@@ -189,7 +219,11 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
         </div>
       </div>
       {showAiModal && (
-        <AiAssistModal notes={notes} onClose={() => setShowAiModal(false)} />
+        <AiAssistModal
+          notes={notes}
+          activityLog={activityLog}
+          onClose={() => setShowAiModal(false)}
+        />
       )}
       <div className="board-wrapper">
         <div className="board-inner">
@@ -201,13 +235,17 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
               note={note}
               isLinkMode={linkMode}
               isLinkSelected={linkFirst === id}
+              isDimmed={matchedNoteIds !== null && !matchedNoteIds.has(id)}
+              userName={userName}
               onMove={handleMove}
               onMoveEnd={handleMoveEnd}
               onTextChange={handleTextChange}
+              onTextCommit={handleTextCommit}
               onDelete={handleDelete}
               onClickForLink={handleClickForLink}
               onSetImageUrl={setNoteImageUrl}
               onSetColor={handleSetColor}
+              onToggleReaction={handleToggleReaction}
             />
           ))}
         </div>
