@@ -92,6 +92,7 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
   updateNote,
   deleteNote,
   addLink,
+  deleteLink,
   setNoteImageUrl,
   toggleReaction,
   commitTextEdit,
@@ -232,7 +233,7 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
 )}
       <div className="board-wrapper">
         <div className="board-inner">
-          <LinkLayer notes={notes} links={links} />
+         <LinkLayer notes={notes} links={links} onDeleteLink={deleteLink} />
           {Object.entries(notes).map(([id, note]) => (
             <StickyNote
               key={id}
