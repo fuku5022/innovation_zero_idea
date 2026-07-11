@@ -2,17 +2,20 @@ import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useBoard } from "./useBoard.js";
 import { useBoardList } from "./useBoardList.js";
 import { downloadActivityLogAsCsv } from "./csvExport.js";
+import { getSavedAuthRole } from "./auth.js";
+import PasswordGate from "./PasswordGate.jsx";
+import FolderSelect from "./FolderSelect.jsx";
 import Home from "./Home.jsx";
 import StickyNote from "./StickyNote.jsx";
 import LinkLayer from "./LinkLayer.jsx";
 import AiAssistModal from "./AiAssistModal.jsx";
 
-const PRESET_COLORS = ["#EF9F27", "#85B7EB", "#97C459", "#ED93B1"];
+var PRESET_COLORS = ["#EF9F27", "#85B7EB", "#97C459", "#ED93B1"];
 
 function getOrCreateUserName() {
-  let name = localStorage.getItem("csb_username");
+  var name = localStorage.getItem("csb_username");
   while (!name || !name.trim()) {
-    const input = window.prompt("あなたの名前を入力してください（空欄では進めません）", "");
+    var input = window.prompt("あなたの名前を入力してください（空欄では進めません）", "");
     name = input ? input.trim() : "";
   }
   localStorage.setItem("csb_username", name);
@@ -20,52 +23,87 @@ function getOrCreateUserName() {
 }
 
 function randomColor() {
-  const hues = ["#F09595", "#FAC775", "#97C459", "#85B7EB", "#AFA9EC", "#ED93B1"];
+  var hues = ["#F09595", "#FAC775", "#97C459", "#85B7EB", "#AFA9EC", "#ED93B1"];
   return hues[Math.floor(Math.random() * hues.length)];
 }
 
 function getBoardIdFromUrl() {
-  const params = new URLSearchParams(window.location.search);
+  var params = new URLSearchParams(window.location.search);
   return params.get("board");
 }
 
 export default function App() {
-  const [userName] = useState(getOrCreateUserName);
-  const [userColor] = useState(randomColor);
-  const { boardList, loaded, createBoard, deleteBoard } = useBoardList();
+  var [authRole, setAuthRole] = useState(getSavedAuthRole);
+  var [userName] = useState(getOrCreateUserName);
+  var [userColor] = useState(randomColor);
+  var boardListState = useBoardList();
+  var boardList = boardListState.boardList;
+  var loaded = boardListState.loaded;
+  var createBoard = boardListState.createBoard;
+  var deleteBoard = boardListState.deleteBoard;
 
-  const [currentBoardId, setCurrentBoardId] = useState(getBoardIdFromUrl);
+  var [currentBoardId, setCurrentBoardId] = useState(getBoardIdFromUrl);
+  var [currentFolder, setCurrentFolder] = useState(null);
 
-  const openBoard = useCallback((id) => {
+  var openBoard = useCallback(function (id) {
     setCurrentBoardId(id);
-    const url = new URL(window.location.href);
+    var url = new URL(window.location.href);
     url.searchParams.set("board", id);
     window.history.pushState({}, "", url);
   }, []);
 
-  const goHome = useCallback(() => {
+  var goHome = useCallback(function () {
     setCurrentBoardId(null);
-    const url = new URL(window.location.href);
+    var url = new URL(window.location.href);
     url.searchParams.delete("board");
     window.history.pushState({}, "", url);
   }, []);
 
-  useEffect(() => {
+  useEffect(function () {
     function handlePopState() {
       setCurrentBoardId(getBoardIdFromUrl());
     }
     window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+    return function () {
+      window.removeEventListener("popstate", handlePopState);
+    };
   }, []);
+
+  // まだ合言葉を入力していなければ、ゲート画面を表示する。
+  if (!authRole) {
+    return (
+      <PasswordGate
+        onAuthenticated={function (role) {
+          setAuthRole(role);
+        }}
+      />
+    );
+  }
+
+  // フォルダをまだ選んでいなければ、フォルダ選択画面を表示する。
+  if (!currentFolder) {
+    return (
+      <FolderSelect
+        role={authRole}
+        onSelectFolder={function (folder) {
+          setCurrentFolder(folder);
+        }}
+      />
+    );
+  }
 
   if (!currentBoardId) {
     return (
       <Home
         boardList={boardList}
         loaded={loaded}
+        folder={currentFolder}
         onCreateBoard={createBoard}
         onOpenBoard={openBoard}
         onDeleteBoard={deleteBoard}
+        onBackToFolders={function () {
+          setCurrentFolder(null);
+        }}
       />
     );
   }
@@ -73,7 +111,7 @@ export default function App() {
   return (
     <BoardView
       boardId={currentBoardId}
-      boardName={boardList[currentBoardId]?.name}
+      boardName={boardList[currentBoardId] ? boardList[currentBoardId].name : ""}
       userName={userName}
       userColor={userColor}
       onGoHome={goHome}
@@ -81,61 +119,72 @@ export default function App() {
   );
 }
 
-function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
-  const {
-    notes,
-    links,
-    presence,
-    activityLog,
-    aiLog,
-    addNote,
-    updateNote,
-    deleteNote,
-    addLink,
-    deleteLink,
-    setNoteImageUrl,
-    toggleReaction,
-    commitTextEdit,
-    saveAiLog,
-    connectionError,
-  } = useBoard(boardId, userName, userColor);
+function BoardView(props) {
+  var boardId = props.boardId;
+  var boardName = props.boardName;
+  var userName = props.userName;
+  var userColor = props.userColor;
+  var onGoHome = props.onGoHome;
 
-  const [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
-  const [linkMode, setLinkMode] = useState(false);
-  const [linkFirst, setLinkFirst] = useState(null);
-  const [showAiModal, setShowAiModal] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const noteRefs = useRef({});
+  var board = useBoard(boardId, userName, userColor);
+  var notes = board.notes;
+  var links = board.links;
+  var presence = board.presence;
+  var activityLog = board.activityLog;
+  var aiLog = board.aiLog;
+  var addNote = board.addNote;
+  var updateNote = board.updateNote;
+  var deleteNote = board.deleteNote;
+  var addLink = board.addLink;
+  var deleteLink = board.deleteLink;
+  var setNoteImageUrl = board.setNoteImageUrl;
+  var toggleReaction = board.toggleReaction;
+  var commitTextEdit = board.commitTextEdit;
+  var saveAiLog = board.saveAiLog;
+  var connectionError = board.connectionError;
 
-  const presenceList = useMemo(() => Object.values(presence), [presence]);
+  var [selectedColor, setSelectedColor] = useState(PRESET_COLORS[0]);
+  var [linkMode, setLinkMode] = useState(false);
+  var [linkFirst, setLinkFirst] = useState(null);
+  var [showAiModal, setShowAiModal] = useState(false);
+  var [searchTerm, setSearchTerm] = useState("");
+  var noteRefs = useRef({});
 
-  const matchedNoteIds = useMemo(() => {
-    const term = searchTerm.trim().toLowerCase();
+  var presenceList = useMemo(function () {
+    return Object.values(presence);
+  }, [presence]);
+
+  var matchedNoteIds = useMemo(function () {
+    var term = searchTerm.trim().toLowerCase();
     if (!term) return null;
     return new Set(
       Object.entries(notes)
-        .filter(([, note]) => (note.text || "").toLowerCase().includes(term))
-        .map(([id]) => id)
+        .filter(function (entry) {
+          return (entry[1].text || "").toLowerCase().includes(term);
+        })
+        .map(function (entry) {
+          return entry[0];
+        })
     );
   }, [notes, searchTerm]);
 
-  useEffect(() => {
+  useEffect(function () {
     if (!matchedNoteIds || matchedNoteIds.size === 0) return;
-    const firstId = Array.from(matchedNoteIds)[0];
-    const el = noteRefs.current[firstId];
+    var firstId = Array.from(matchedNoteIds)[0];
+    var el = noteRefs.current[firstId];
     if (el && el.scrollIntoView) {
       el.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
     }
   }, [matchedNoteIds]);
 
   function handleAddNote() {
-    const x = 80 + Math.random() * 400;
-    const y = 80 + Math.random() * 300;
+    var x = 80 + Math.random() * 400;
+    var y = 80 + Math.random() * 300;
     addNote(x, y, selectedColor);
   }
 
   function handleMove(id, x, y) {
-    updateNote(id, { x, y });
+    updateNote(id, { x: x, y: y });
   }
 
   function handleMoveEnd(id) {
@@ -143,16 +192,16 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
   }
 
   function handleTextChange(id, text) {
-    updateNote(id, { text });
+    updateNote(id, { text: text });
   }
 
   function handleTextCommit(id) {
-    const text = notes[id]?.text || "";
+    var text = notes[id] ? notes[id].text || "" : "";
     commitTextEdit(id, text);
   }
 
   function handleDelete(id) {
-    const text = notes[id]?.text || "";
+    var text = notes[id] ? notes[id].text || "" : "";
     deleteNote(id, text);
   }
 
@@ -174,7 +223,7 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
   }
 
   function toggleLinkMode() {
-    setLinkMode((v) => !v);
+    setLinkMode(function (v) { return !v; });
     setLinkFirst(null);
   }
 
@@ -196,20 +245,22 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
           ⇄ 線でつなぐ{linkMode ? "（付箋を2つクリック）" : ""}
         </button>
         <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
-          {PRESET_COLORS.map((hex) => (
-            <button
-              key={hex}
-              className={`color-swatch${selectedColor === hex ? " selected" : ""}`}
-              style={{ background: hex }}
-              aria-label={hex}
-              onClick={() => setSelectedColor(hex)}
-            />
-          ))}
+          {PRESET_COLORS.map(function (hex) {
+            return (
+              <button
+                key={hex}
+                className={"color-swatch" + (selectedColor === hex ? " selected" : "")}
+                style={{ background: hex }}
+                aria-label={hex}
+                onClick={function () { setSelectedColor(hex); }}
+              />
+            );
+          })}
           <label className="color-swatch-custom" title="自由な色を選ぶ">
             <input
               type="color"
               value={selectedColor}
-              onChange={(e) => setSelectedColor(e.target.value)}
+              onChange={function (e) { setSelectedColor(e.target.value); }}
             />
           </label>
         </div>
@@ -218,18 +269,20 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
           className="search-input"
           placeholder="🔍 付箋を検索"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={function (e) { setSearchTerm(e.target.value); }}
         />
         <button onClick={handleExportCsv}>⬇ ログをCSVで保存</button>
-        <button onClick={() => setShowAiModal(true)}>✨ AIに相談</button>
+        <button onClick={function () { setShowAiModal(true); }}>✨ AIに相談</button>
         <div className="presence-bar">
           <span>{boardName || boardId}</span>
-          {presenceList.map((p, i) => (
-            <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span className="presence-dot" style={{ background: p.color }} />
-              {p.name}
-            </span>
-          ))}
+          {presenceList.map(function (p, i) {
+            return (
+              <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span className="presence-dot" style={{ background: p.color }} />
+                {p.name}
+              </span>
+            );
+          })}
         </div>
       </div>
       {showAiModal && (
@@ -238,36 +291,40 @@ function BoardView({ boardId, boardName, userName, userColor, onGoHome }) {
           activityLog={activityLog}
           aiLog={aiLog}
           onSaveAiLog={saveAiLog}
-          onClose={() => setShowAiModal(false)}
+          onClose={function () { setShowAiModal(false); }}
         />
       )}
       <div className="board-wrapper">
         <div className="board-inner">
           <LinkLayer notes={notes} links={links} onDeleteLink={deleteLink} />
-          {Object.entries(notes).map(([id, note]) => (
-            <StickyNote
-              key={id}
-              id={id}
-              note={note}
-              isLinkMode={linkMode}
-              isLinkSelected={linkFirst === id}
-              isDimmed={matchedNoteIds !== null && !matchedNoteIds.has(id)}
-              isMatched={matchedNoteIds !== null && matchedNoteIds.has(id)}
-              noteRef={(el) => {
-                noteRefs.current[id] = el;
-              }}
-              userName={userName}
-              onMove={handleMove}
-              onMoveEnd={handleMoveEnd}
-              onTextChange={handleTextChange}
-              onTextCommit={handleTextCommit}
-              onDelete={handleDelete}
-              onClickForLink={handleClickForLink}
-              onSetImageUrl={setNoteImageUrl}
-              onSetColor={handleSetColor}
-              onToggleReaction={handleToggleReaction}
-            />
-          ))}
+          {Object.entries(notes).map(function (entry) {
+            var id = entry[0];
+            var note = entry[1];
+            return (
+              <StickyNote
+                key={id}
+                id={id}
+                note={note}
+                isLinkMode={linkMode}
+                isLinkSelected={linkFirst === id}
+                isDimmed={matchedNoteIds !== null && !matchedNoteIds.has(id)}
+                isMatched={matchedNoteIds !== null && matchedNoteIds.has(id)}
+                noteRef={function (el) {
+                  noteRefs.current[id] = el;
+                }}
+                userName={userName}
+                onMove={handleMove}
+                onMoveEnd={handleMoveEnd}
+                onTextChange={handleTextChange}
+                onTextCommit={handleTextCommit}
+                onDelete={handleDelete}
+                onClickForLink={handleClickForLink}
+                onSetImageUrl={setNoteImageUrl}
+                onSetColor={handleSetColor}
+                onToggleReaction={handleToggleReaction}
+              />
+            );
+          })}
         </div>
       </div>
     </div>
