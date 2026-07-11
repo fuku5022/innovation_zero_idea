@@ -164,4 +164,53 @@ export default function StickyNote({
       )}
 
       {note.imageUrl && (
-        <div
+        <div className="note-image-wrapper">
+          <img src={note.imageUrl} alt="" className="note-image" />
+          <button
+            className="note-image-remove"
+            aria-label="画像を削除"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSetImageUrl(id, null);
+            }}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      <textarea
+        ref={textareaRef}
+        value={note.text || ""}
+        placeholder="アイデアをここに"
+        onChange={(e) => {
+          onTextChange(id, e.target.value);
+          autoResize();
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+        rows={1}
+      />
+
+      {!note.imageUrl && (
+        <button
+          className="note-image-add"
+          disabled={uploading}
+          onClick={(e) => {
+            e.stopPropagation();
+            fileInputRef.current?.click();
+          }}
+        >
+          {uploading ? "アップロード中..." : "＋画像"}
+        </button>
+      )}
+      {uploadError && <p className="note-image-error">失敗しました。もう一度お試しください</p>}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
+    </div>
+  );
+}
