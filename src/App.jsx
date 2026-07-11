@@ -1,5 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useBoard } from "./useBoard.js";
+import { useBoardList } from "./useBoardList.js";
+import Home from "./Home.jsx";
 import StickyNote from "./StickyNote.jsx";
 import LinkLayer from "./LinkLayer.jsx";
 
@@ -25,110 +27,12 @@ function randomColor() {
   return hues[Math.floor(Math.random() * hues.length)];
 }
 
+function getBoardIdFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get("board");
+}
+
 export default function App() {
   const [userName] = useState(getOrCreateUserName);
   const [userColor] = useState(randomColor);
-  const {
-    notes,
-    links,
-    presence,
-    addNote,
-    updateNote,
-    deleteNote,
-    addLink,
-    boardId,
-    connectionError,
-  } = useBoard(userName, userColor);
-
-  const [selectedColor, setSelectedColor] = useState("amber");
-  const [linkMode, setLinkMode] = useState(false);
-  const [linkFirst, setLinkFirst] = useState(null);
-
-  const presenceList = useMemo(() => Object.values(presence), [presence]);
-
-  function handleAddNote() {
-    const x = 80 + Math.random() * 400;
-    const y = 80 + Math.random() * 300;
-    addNote(x, y, selectedColor);
-  }
-
-  function handleMove(id, x, y) {
-    updateNote(id, { x, y });
-  }
-
-  function handleTextChange(id, text) {
-    updateNote(id, { text });
-  }
-
-  function handleDelete(id) {
-    deleteNote(id);
-  }
-
-  function handleClickForLink(id) {
-    if (!linkFirst) {
-      setLinkFirst(id);
-    } else if (linkFirst !== id) {
-      addLink(linkFirst, id);
-      setLinkFirst(null);
-    }
-  }
-
-  function toggleLinkMode() {
-    setLinkMode((v) => !v);
-    setLinkFirst(null);
-  }
-
-  return (
-    <div>
-      {connectionError && (
-        <div className="status-banner">
-          Firebaseに接続できていません。src/firebase.js に自分のFirebaseプロジェクトの設定を入力してください（README参照）。
-        </div>
-      )}
-      <div className="toolbar">
-        <button onClick={handleAddNote}>＋ 付箋を追加</button>
-        <button className={linkMode ? "active" : ""} onClick={toggleLinkMode}>
-          ⇄ 線でつなぐ{linkMode ? "（付箋を2つクリック）" : ""}
-        </button>
-        <div style={{ display: "flex", gap: 4 }}>
-          {COLORS.map((c) => (
-            <button
-              key={c}
-              className={`color-swatch${selectedColor === c ? " selected" : ""}`}
-              style={{ background: COLOR_HEX[c] }}
-              aria-label={c}
-              onClick={() => setSelectedColor(c)}
-            />
-          ))}
-        </div>
-        <div className="presence-bar">
-          <span>ボード: {boardId}</span>
-          {presenceList.map((p, i) => (
-            <span key={i} style={{ display: "flex", alignItems: "center", gap: 4 }}>
-              <span className="presence-dot" style={{ background: p.color }} />
-              {p.name}
-            </span>
-          ))}
-        </div>
-      </div>
-      <div className="board-wrapper">
-        <div className="board-inner">
-          <LinkLayer notes={notes} links={links} />
-          {Object.entries(notes).map(([id, note]) => (
-            <StickyNote
-              key={id}
-              id={id}
-              note={note}
-              isLinkMode={linkMode}
-              isLinkSelected={linkFirst === id}
-              onMove={handleMove}
-              onTextChange={handleTextChange}
-              onDelete={handleDelete}
-              onClickForLink={handleClickForLink}
-            />
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
+  const { boardList, loaded, createBoard } =
