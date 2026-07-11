@@ -3,12 +3,13 @@ import { askGeminiAboutBoard } from "./gemini.js";
 
 const COOLDOWN_MS = 8000;
 
-export default function AiAssistModal({ notes, activityLog, onClose }) {
+export default function AiAssistModal({ notes, activityLog, aiLog, onSaveAiLog, onClose }) {
   const [instruction, setInstruction] = useState("要約して");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState("");
   const [error, setError] = useState(false);
   const [cooldown, setCooldown] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const lastRequestRef = useRef(0);
 
   const notesText = Object.values(notes)
@@ -21,6 +22,10 @@ export default function AiAssistModal({ notes, activityLog, onClose }) {
     .filter((row) => row.action === "テキストを編集" && row.detail && row.detail.trim())
     .map((row) => `${row.userName}: ${row.detail}`)
     .join("\n");
+
+  const historyList = Object.values(aiLog || {}).sort(
+    (a, b) => (b.timestamp || 0) - (a.timestamp || 0)
+  );
 
   async function handleAsk() {
     if (!instruction.trim()) return;
@@ -43,6 +48,9 @@ export default function AiAssistModal({ notes, activityLog, onClose }) {
         : notesText;
       const text = await askGeminiAboutBoard(combinedText, instruction.trim());
       setResult(text);
+      if (onSaveAiLog) {
+        onSaveAiLog(instruction.trim(), text);
+      }
     } catch (e) {
       setError(true);
     } finally {
@@ -99,6 +107,36 @@ export default function AiAssistModal({ notes, activityLog, onClose }) {
           <div className="ai-modal-result">
             {result.split("\n").map((line, i) => (
               <p key={i}>{line}</p>
+            ))}
+          </div>
+        )}
+
+        <div className="ai-modal-history-toggle">
+          <button onClick={() => setShowHistory((v) => !v)}>
+            {showHistory ? "履歴を閉じる ▲" : `過去の相談履歴を見る（${historyList.length}件） ▼`}
+          </button>
+        </div>
+
+        {showHistory && (
+          <div className="ai-modal-history">
+            {historyList.length === 0 && (
+              <p className="ai-modal-history-empty">まだ相談履歴はありません。</p>
+            )}
+            {historyList.map((row, i) => (
+              <div key={i} className="ai-modal-history-item">
+                <div className="ai-modal-history-meta">
+                  <span className="ai-modal-history-user">{row.userName}</span>
+                  <span className="ai-modal-history-time">
+                    {row.clientTime ? new Date(row.clientTime).toLocaleString("ja-JP") : ""}
+                  </span>
+                </div>
+                <p className="ai-modal-history-instruction">「{row.instruction}」</p>
+                <div className="ai-modal-history-result">
+                  {(row.result || "").split("\n").map((line, j) => (
+                    <p key={j}>{line}</p>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         )}
