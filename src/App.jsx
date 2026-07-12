@@ -42,6 +42,20 @@ function getBoardIdFromUrl() {
   return params.get("board");
 }
 
+var FOLDER_STORAGE_KEY = "csb_current_folder";
+
+function getSavedFolder() {
+  return localStorage.getItem(FOLDER_STORAGE_KEY);
+}
+
+function saveFolder(folder) {
+  if (folder) {
+    localStorage.setItem(FOLDER_STORAGE_KEY, folder);
+  } else {
+    localStorage.removeItem(FOLDER_STORAGE_KEY);
+  }
+}
+
 export default function App() {
   var [authRole, setAuthRole] = useState(getSavedAuthRole);
   var [userName] = useState(getOrCreateUserName);
@@ -54,7 +68,7 @@ export default function App() {
   var renameBoard = boardListState.renameBoard;
 
   var [currentBoardId, setCurrentBoardId] = useState(getBoardIdFromUrl);
-  var [currentFolder, setCurrentFolder] = useState(null);
+  var [currentFolder, setCurrentFolder] = useState(getSavedFolder);
   var [boardCheckReady, setBoardCheckReady] = useState(false);
 
   var openBoard = useCallback(function (id) {
@@ -85,9 +99,11 @@ export default function App() {
     setBoardCheckReady(false);
     if (!currentBoardId) return;
     // boardListの反映に多少のタイムラグがあるため、少し待ってから判定する。
+    // （currentBoardIdが変わった時だけリセットし、boardListの再取得自体では
+    //   リセットしないようにして、判定が不安定にならないようにする）
     var timer = setTimeout(function () {
       setBoardCheckReady(true);
-    }, 400);
+    }, 600);
     return function () {
       clearTimeout(timer);
     };
@@ -97,6 +113,7 @@ export default function App() {
     clearAuthRole();
     setAuthRole(null);
     setCurrentFolder(null);
+    saveFolder(null);
     goHome();
   }, [goHome]);
 
@@ -118,6 +135,7 @@ export default function App() {
         role={authRole}
         onSelectFolder={function (folder) {
           setCurrentFolder(folder);
+          saveFolder(folder);
         }}
         onLogout={handleLogout}
       />
@@ -136,18 +154,20 @@ export default function App() {
         onRenameBoard={renameBoard}
         onBackToFolders={function () {
           setCurrentFolder(null);
+          saveFolder(null);
         }}
         onLogout={handleLogout}
       />
     );
   }
 
-  // 直接URLでボードを開こうとした場合、そのボードが今の役割から
-  // 見えるフォルダに属しているかを確認する。属していなければホームへ戻す。
+  // 直接URLでボードを開こうとした場合、そのボードが「今選んでいるフォルダ」に
+  // 属しているかを確認する。属していなければフォルダ選択へ戻す。
+  // targetBoardがまだ読み込まれていない（undefined）間は、誤判定を避けるため何もしない。
   var targetBoard = boardList[currentBoardId];
   if (loaded && boardCheckReady && targetBoard) {
     var boardFolder = targetBoard.folder || "internal";
-    var isAllowed = authRole === "internal" || boardFolder === "external";
+    var isAllowed = boardFolder === currentFolder;
     if (!isAllowed) {
       return (
         <div className="gate-wrapper">
@@ -159,6 +179,7 @@ export default function App() {
               onClick={function () {
                 goHome();
                 setCurrentFolder(null);
+                saveFolder(null);
               }}
             >
               ホームに戻る
